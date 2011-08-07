@@ -45,12 +45,12 @@ $(BIN_DIR):
 OBJS += main.o
 
 COMM_OBJS += channel.o
-COMM_OBJS += ConvIIR.o
 COMM_OBJS += debug_log.o
 COMM_OBJS += modulator.o
 COMM_OBJS += random.o
 COMM_OBJS += types.o
-COMM_OBJS += histogram.o
+COMM_OBJS += CRelay.o
+
 
 
 $(PROGRAM): $(BIN_DIR)/$(PROGRAM)
