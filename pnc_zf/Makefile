@@ -3,7 +3,7 @@ SYMBOLS :=
 CFLAGS :=
 INCLUDES := -I../../comm
 LDFLAGS :=
-LIBS :=
+LIBS := -lm
 
 DEBUG = 1
 
@@ -49,10 +49,8 @@ COMM_OBJS += ConvIIR.o
 COMM_OBJS += debug_log.o
 COMM_OBJS += modulator.o
 COMM_OBJS += random.o
-COMM_OBJS += turbocodec.o
 COMM_OBJS += types.o
 COMM_OBJS += histogram.o
-COMM_OBJS += exit_util.o
 
 
 $(PROGRAM): $(BIN_DIR)/$(PROGRAM)
