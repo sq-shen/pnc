@@ -22,7 +22,7 @@ typedef struct _label {
  * De-mapping boundry
  */
 typedef struct _dem_region_1d {
-	double low_db;	// lower bound
+	double low_bd;	// lower bound
 	double up_bd;	// upper bound
 	int idx;		// 1-d index of the mapping label
 } dem_region_1d;
@@ -33,15 +33,18 @@ public:
 	CRelay();
 	virtual ~CRelay();
 
-	//
+	// Initialize demapping region
 	void init_dem_region(int x_num, dem_region_1d *x_rgns,
-						 int y_num, dem_region_1d *y_rgns);
-
-	void set_rx_sym_len(int len);
+						 int y_num, dem_region_1d *y_rgns,
+						 int **dem_lbl);
 
 	// PNC demapping
 	void pnc_demapping(int len, std::complex<double> *input, int *res_dem);
 
+
+	// Set rx_sym_len
+	void set_rx_sym_len(int len);
+	
 protected:
 
 	// received symbol length
@@ -56,6 +59,7 @@ protected:
 	int y_dem_rgn_size;
 	dem_region_1d *x_dem_rgn;
 	dem_region_1d *y_dem_rgn;
+	int **dem_label;
 
 
 };
