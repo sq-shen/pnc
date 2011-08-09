@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 	// Simulation parameters
 	//////////////////////////////////////////////////
 	double Es = 1;
-	double EsN0dB = 15;
+	double EsN0dB = 10;
 	double EsN0 = pow(10, EsN0dB/10);
 	double N0 = 1/EsN0;
 	double sqrt_N0 = sqrt(N0);
