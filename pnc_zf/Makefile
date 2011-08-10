@@ -3,12 +3,12 @@ SYMBOLS :=
 CFLAGS :=
 INCLUDES := -I../../comm
 LDFLAGS :=
-LIBS := -lm
+LIBS := -lm -litpp -lfftw3 -llapack -lblas
 
 DEBUG = 1
 
 ifeq ($(DEBUG),1)
-	CFLAGS  += -g -Wall
+	CFLAGS  += -g -Wall -DNDEBUG -O3 -pipe
 	
 	SYMBOLS += -DDBGSHOW
 	SYMBOLS += -DCHECKNUM
@@ -44,11 +44,11 @@ $(BIN_DIR):
 # Main simulation program
 OBJS += pnc_zf.o
 
-COMM_OBJS += channel.o
+#COMM_OBJS += channel.o
 COMM_OBJS += debug_log.o
-COMM_OBJS += modulator.o
-COMM_OBJS += random.o
-COMM_OBJS += types.o
+#COMM_OBJS += modulator.o
+#COMM_OBJS += random.o
+#COMM_OBJS += types.o
 COMM_OBJS += CRelay.o
 
 
