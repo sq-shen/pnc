@@ -42,7 +42,7 @@ $(BIN_DIR):
 	@[ -d $@ ] || mkdir $@ 
 
 # Main simulation program
-OBJS += main.o
+OBJS += pnc_zf.o
 
 COMM_OBJS += channel.o
 COMM_OBJS += debug_log.o
