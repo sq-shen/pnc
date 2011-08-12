@@ -12,16 +12,29 @@
 // #include "../../comm/modulator.h"
 // #include "../../comm/channel.h"
 #include "../../comm/debug_log.h"
-#include "CRelay.h"
+//#include "CRelay.h"
+#include "mimomac.h"
 
 
 using namespace itpp;
 using namespace std;
 
+Array<cvec> to_mimo_input(Array<cvec> &user_input) {
+	
+	int sym_len = user_input(0).size();
+	Array<cvec> mimo_in(sym_len);
+	
+	
+	return mimo_in;
+
+
+}
+
 
 int main(int argc, char *argv[]) 
 {
-	//srand(1);
+	RNG_randomize();
+	
 	Real_Timer tt;
 
 	///////////////////////////
@@ -58,16 +71,14 @@ int main(int argc, char *argv[])
 	// Channel initialization
 	/////////////////////////////////////////////////
 	//AWGN_Channel awgn_channel;     //The AWGN channel class
-	complex<double> H[2][2] = {
-		{1.6, 0.3},
-		{0.5, 1.2}
-	};
 
 
 	/////////////////////////////////////////////////
 	// Users' modulators
 	/////////////////////////////////////////////////
-	QPSK qpsk;                     //The QPSK modulator class
+	QAM qam(4);                     //The 4-QAM modulator class
+	cvec syms = qam.get_symbols();
+	cout<<"4-QAM constellation: "<<syms<<endl;
 
 
 	/////////////////////////////////////////////////
@@ -95,11 +106,16 @@ int main(int argc, char *argv[])
 		bv_msg_xor = bv_msg_u1 + bv_msg_u2;
 		
 		// modulation
-		
+		cvec cv_txsig_u1 = qam.modulate_bits(bv_msg_u1);
+		cvec cv_txsig_u2 = qam.modulate_bits(bv_msg_u2);
 		
 		cout<<bv_msg_u1<<endl;
+		cout<<cv_txsig_u1<<endl;
+		
 		cout<<bv_msg_u2<<endl;
-		cout<<bv_msg_xor<<endl;
+		cout<<cv_txsig_u2<<endl;
+		
+		//cout<<bv_msg_xor<<endl;
 		
 	}
 	printf("\nEnd\n");

@@ -9,11 +9,14 @@
  */
 class MimoMac {
 public:
-	MimoMac(int nuser, int nrx);
+	MimoMac(int nuser, int nrx, double var_2d);
 	virtual ~MimoMac();
 	
 	// channel
-	Array<cvec> channel(const Array<cvec> &tx_signals);
+	itpp::Array<itpp::cvec> channel(const itpp::Array<itpp::cvec> &tx_signals);
+	
+	// Generate new channel
+	void genH();
 
 protected:
 	
@@ -22,10 +25,12 @@ protected:
 	
 	// Number of rx antenna of the receiver
 	int num_rx_ant;
-
-	cmat H;
 	
+	// Noiser variance
+	double N0;
 
+	// mimo channel: num_rx_ant x num_user
+	itpp::cmat H;
 
 };
 
