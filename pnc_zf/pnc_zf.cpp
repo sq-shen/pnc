@@ -23,11 +23,15 @@ Array<cvec> to_mimo_input(Array<cvec> &user_input) {
 	
 	int sym_len = user_input(0).size();
 	Array<cvec> mimo_in(sym_len);
-	
+	for(int i=0; i<sym_len; i++) {
+		cvec in(user_input.size());
+		for(int k=0; k<user_input.size(); k++) {
+			in(k) = user_input(k).get(i);
+		}
+		mimo_in(i) = in;
+	}
 	
 	return mimo_in;
-
-
 }
 
 
@@ -54,6 +58,9 @@ int main(int argc, char *argv[])
 	double sigma2 = N0/2;
 	double sigma  = sqrt(sigma2);
 
+	int num_user = 2;
+	int num_rx_ant = 2;
+
 
 	// block
 	int block_num = 1;
@@ -70,8 +77,7 @@ int main(int argc, char *argv[])
 	/////////////////////////////////////////////////
 	// Channel initialization
 	/////////////////////////////////////////////////
-	//AWGN_Channel awgn_channel;     //The AWGN channel class
-
+	MimoMac mimomac(num_user, num_rx_ant, N0);
 
 	/////////////////////////////////////////////////
 	// Users' modulators
@@ -100,22 +106,43 @@ int main(int argc, char *argv[])
 
 	for(bk=1; bk<=block_num; bk++) {
 		
+		//======================================
 		// generate message bits
+		//======================================
 		bv_msg_u1 = randb(msg_len);
 		bv_msg_u2 = randb(msg_len);
 		bv_msg_xor = bv_msg_u1 + bv_msg_u2;
 		
+		//======================================
 		// modulation
+		//======================================
 		cvec cv_txsig_u1 = qam.modulate_bits(bv_msg_u1);
 		cvec cv_txsig_u2 = qam.modulate_bits(bv_msg_u2);
 		
+		//======================================
+		// prepare proper format for mimo input
+		//======================================
+		Array<cvec> user_input(2);
+		user_input(0) = cv_txsig_u1;
+		user_input(1) = cv_txsig_u2;
+		Array<cvec> mimo_input = to_mimo_input(user_input);
+
+		//======================================
+		// channel
+		//======================================
+		Array<cvec> mimo_output = mimomac.channel(mimo_input);
+
+
 		cout<<bv_msg_u1<<endl;
 		cout<<cv_txsig_u1<<endl;
 		
 		cout<<bv_msg_u2<<endl;
 		cout<<cv_txsig_u2<<endl;
 		
-		//cout<<bv_msg_xor<<endl;
+		cout<<user_input<<endl;
+		cout<<mimo_input<<endl;
+
+		cout<<mimo_output<<endl;
 		
 	}
 	printf("\nEnd\n");
