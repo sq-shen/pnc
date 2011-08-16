@@ -12,8 +12,8 @@
 // #include "../../comm/modulator.h"
 // #include "../../comm/channel.h"
 #include "../../comm/debug_log.h"
-//#include "CRelay.h"
 #include "mimomac.h"
+#include "zftwrelay.h"
 
 
 using namespace itpp;

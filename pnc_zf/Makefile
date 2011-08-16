@@ -51,6 +51,8 @@ COMM_OBJS += debug_log.o
 #COMM_OBJS += types.o
 #COMM_OBJS += CRelay.o
 COMM_OBJS += mimomac.o
+COMM_OBJS += zftwrelay.o
+
 
 
 
