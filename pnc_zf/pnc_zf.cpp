@@ -74,6 +74,7 @@ int main(int argc, char *argv[])
 	cvec cv_rx_sym;
 	
 	vec a = "1 1";
+	cout<<a(0)<<","<<a(1)<<endl;
 
 
 	/////////////////////////////////////////////////

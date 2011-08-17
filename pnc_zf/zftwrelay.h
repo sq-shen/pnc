@@ -19,6 +19,14 @@ typedef struct {
 	int label;
 } sp_pt;
 
+typedef struct {
+	double min_x;
+	double max_x;
+	double min_y;
+	double max_y;
+	int label;
+} region;
+
 
 
 class ZfTwRelay {
@@ -36,7 +44,11 @@ public:
 	// Initialize demodulation region
 	void init_dem_region(itpp::vec &a, itpp::cvec &m1, itpp::cvec &m2);
 
-	//  
+	// Get the index of the demodulation region
+	int get_region_idx(std::complex<double> symbol);
+
+	//
+	itpp::ivec pnc_demapping(itpp::cvec &recv_signal);
 		
 
 protected:
@@ -48,6 +60,12 @@ protected:
 
 	// Superimposed constellation points
 	itpp::Array<sp_pt> sp_constellation;
+
+	// Demodulation region (9 regions)
+	itpp::Array<region> dem_regions;
+
+	itpp::vec xbndry;
+	itpp::vec ybndry;
 
 };
 
