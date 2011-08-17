@@ -10,30 +10,54 @@
 
 #include <itpp/itcomm.h>
 
+
+typedef struct {
+	// coordination of the point
+	std::complex<double> pt; 
+	
+	// decimal labeling
+	int label;
+} sp_pt;
+
+
+
 class ZfTwRelay {
 public:
 	ZfTwRelay();
 	virtual ~ZfTwRelay();
 
-	//
-	void setH(itpp::cmat &ch);
+	// Set the channel matrix
+	void set_H(itpp::cmat &ch);
+
+	// Set the linear combination factor
+	void set_lincoeff(itpp::vec &a);
 
 
-private:
-	void init_dem_region();
+	// Initialize demodulation region
+	void init_dem_region(itpp::vec &a, itpp::cvec &m1, itpp::cvec &m2);
 
+	//  
+		
 
 protected:
-	// channel
-	itpp::cmat cm_H;
+	// Estimated channel matrix
+	itpp::cmat H;
 
-	// coefficient of two
-	itpp::ivec iv_a;
+	// Linear combination factor of the two transmitted signals
+	itpp::vec lincoeff;
+
+	// Superimposed constellation points
+	itpp::Array<sp_pt> sp_constellation;
 
 };
 
-inline void ZfTwRelay::setH(itpp::cmat &ch) {
-	cm_H = ch;
+inline void ZfTwRelay::set_H(itpp::cmat &ch) {
+	H = ch;
 }
+
+inline void ZfTwRelay::set_lincoeff(itpp::vec &a) {
+	lincoeff = a;
+}
+
 
 #endif /* ZFTWRELAY_H_ */

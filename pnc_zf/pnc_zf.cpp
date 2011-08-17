@@ -72,6 +72,8 @@ int main(int argc, char *argv[])
 	
 	cvec cv_tx_sym_u1, cv_tx_sym_u2;
 	cvec cv_rx_sym;
+	
+	vec a = "1 1";
 
 
 	/////////////////////////////////////////////////
@@ -91,8 +93,8 @@ int main(int argc, char *argv[])
 	// PNC Relay
 	// Demapping region (x1 + x2)
 	/////////////////////////////////////////////////
-
-
+	ZfTwRelay relay;
+	relay.init_dem_region(a, syms, syms);
 
 
 
