@@ -9,6 +9,7 @@
  */
 class MimoMac {
 public:
+	MimoMac(int nuser, int nrx);
 	MimoMac(int nuser, int nrx, double var_2d);
 	virtual ~MimoMac();
 	
@@ -18,6 +19,8 @@ public:
 	// Generate new channel
 	void genH();
 	
+	void set_N0(double var_2d);
+
 	itpp::cmat get_H();
 
 protected:
@@ -38,6 +41,10 @@ protected:
 
 inline itpp::cmat MimoMac::get_H() {
 	return H;
+}
+
+inline void MimoMac::set_N0(double var_2d) {
+	N0 = var_2d;
 }
 
 

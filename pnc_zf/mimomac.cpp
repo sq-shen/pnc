@@ -3,12 +3,21 @@
 using namespace itpp;
 using namespace std;
 
+MimoMac::MimoMac(int nuser, int nrx) {
+
+	num_user = nuser;
+	num_rx_ant = nrx;
+	
+	// H: nrx x nuser
+	H = randn_c(num_rx_ant, num_user);
+}
+
 MimoMac::MimoMac(int nuser, int nrx, double var_2d) {
 
 	num_user = nuser;
 	num_rx_ant = nrx;
 	N0 = var_2d;
-	
+
 	// H: nrx x nuser
 	H = randn_c(num_rx_ant, num_user);
 }
