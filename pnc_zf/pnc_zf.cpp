@@ -6,15 +6,10 @@
 
 #include <itpp/itcomm.h>
 
-
 #include "../../comm/comm.h"
-// #include "../../comm/random.h"
-// #include "../../comm/modulator.h"
-// #include "../../comm/channel.h"
 #include "../../comm/debug_log.h"
 #include "mimomac.h"
 #include "zftwrelay.h"
-
 
 using namespace itpp;
 using namespace std;
@@ -32,6 +27,16 @@ Array<cvec> to_mimo_input(Array<cvec> &user_input) {
 	}
 	
 	return mimo_in;
+}
+
+int sym_err(bvec bv_src, ivec iv_dem) {
+	int err = 0;
+	for(int i=0, k=0; i<iv_dem.size(); i++, k+=2) {
+		int src = (bv_src(k).value()<<1) + bv_src(k+1).value();
+		if(src!=iv_dem(i))
+			err++;
+	}
+	return err;
 }
 
 
@@ -63,8 +68,8 @@ int main(int argc, char *argv[])
 
 
 	// block
-	int block_num = 1;
-	int msg_len = 10;
+	int block_num = 100;
+	int msg_len = 10000;
 	int sym_len = msg_len/2;  // QPSK
 
 	bvec bv_msg_u1, bv_msg_u2;
@@ -73,15 +78,12 @@ int main(int argc, char *argv[])
 	cvec cv_tx_sym_u1, cv_tx_sym_u2;
 	cvec cv_rx_sym;
 	
+	/////////////////////////////////////////////////
+	// Linear combination coefficient
+	/////////////////////////////////////////////////
 	vec a = "1 1";
 	cout<<a(0)<<","<<a(1)<<endl;
-
-
-	/////////////////////////////////////////////////
-	// Channel initialization
-	/////////////////////////////////////////////////
-	MimoMac mimomac(num_user, num_rx_ant, N0);
-
+	
 	/////////////////////////////////////////////////
 	// Users' modulators
 	/////////////////////////////////////////////////
@@ -89,14 +91,23 @@ int main(int argc, char *argv[])
 	cvec syms = qam.get_symbols();
 	cout<<"4-QAM constellation: "<<syms<<endl;
 
+	/////////////////////////////////////////////////
+	// Channel initialization
+	/////////////////////////////////////////////////
+	MimoMac mimomac(num_user, num_rx_ant, N0);
+	mimomac.genH();
+	cmat H = mimomac.get_H();
+	cout<<"H="<<H<<endl;
 
 	/////////////////////////////////////////////////
 	// PNC Relay
 	// Demapping region (x1 + x2)
 	/////////////////////////////////////////////////
 	ZfTwRelay relay;
+	relay.set_H(H);
 	relay.init_dem_region(a, syms, syms);
-
+	relay.show_sp_constellation();
+	relay.show_dem_regions();
 
 
 	/////////////////////////////////////////////////
@@ -134,18 +145,31 @@ int main(int argc, char *argv[])
 		// channel
 		//======================================
 		Array<cvec> mimo_output = mimomac.channel(mimo_input);
-
-
-		cout<<bv_msg_u1<<endl;
-		cout<<cv_txsig_u1<<endl;
 		
-		cout<<bv_msg_u2<<endl;
-		cout<<cv_txsig_u2<<endl;
 		
-		cout<<user_input<<endl;
-		cout<<mimo_input<<endl;
+		//======================================
+		// PNC Demapping
+		//======================================
+		ivec dem_sym = relay.pnc_demapping(mimo_output);
+		
+		// cout<<"bv_msg_xor="<<bv_msg_xor<<endl;
+		// cout<<"dem_sym="<<dem_sym<<endl;
+		
+		err += sym_err(bv_msg_xor, dem_sym);
+		
+		tot_sym += sym_len;
+		printf("#bk=%6i, #err=%6i, ser=%1.3e\r", bk, err, ((double)err)/tot_sym);
 
-		cout<<mimo_output<<endl;
+		// cout<<bv_msg_u1<<endl;
+		// cout<<cv_txsig_u1<<endl;
+		
+		// cout<<bv_msg_u2<<endl;
+		// cout<<cv_txsig_u2<<endl;
+		
+		// cout<<user_input<<endl;
+		// cout<<mimo_input<<endl;
+
+		// cout<<mimo_output<<endl;
 		
 	}
 	printf("\nEnd\n");

@@ -17,6 +17,8 @@ public:
 	
 	// Generate new channel
 	void genH();
+	
+	itpp::cmat get_H();
 
 protected:
 	
@@ -34,6 +36,9 @@ protected:
 
 };
 
+inline itpp::cmat MimoMac::get_H() {
+	return H;
+}
 
 
 #endif
