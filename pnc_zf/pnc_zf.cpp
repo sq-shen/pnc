@@ -47,6 +47,17 @@ int main(int argc, char *argv[])
 		a1 = atoi(argv[1]);
 		a2 = atoi(argv[2]);
 	}
+	
+	cmat read_H;
+	bool is_genH = true;
+	if(argc>=4) {
+		it_file ff;
+		ff.open(argv[3]);
+		ff>>Name("H")>>read_H;
+		ff.close();	
+		cout<<"Read H: "<<read_H<<endl;
+		is_genH = false;
+	}
 
 	RNG_randomize();
 	Real_Timer tt;
@@ -106,7 +117,10 @@ int main(int argc, char *argv[])
 	// Channel initialization
 	/////////////////////////////////////////////////
 	MimoMac mimomac(num_user, num_rx_ant);
-	mimomac.genH();
+	if(is_genH)
+		mimomac.genH();
+	else
+		mimomac.set_H(read_H);
 	cmat H = mimomac.get_H();
 	cout<<"H="<<H<<endl;
 	log<<"H="<<H<<endl;

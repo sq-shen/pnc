@@ -19,6 +19,8 @@ public:
 	// Generate new channel
 	void genH();
 	
+	void set_H(itpp::cmat &ch);
+	
 	void set_N0(double var_2d);
 
 	itpp::cmat get_H();
@@ -45,6 +47,10 @@ inline itpp::cmat MimoMac::get_H() {
 
 inline void MimoMac::set_N0(double var_2d) {
 	N0 = var_2d;
+}
+
+inline void MimoMac::set_H(itpp::cmat &ch) {
+	H = ch;
 }
 
 

@@ -31,35 +31,42 @@ VPATH = $(COMM_DIR)
 ############################################################
 # Project: pnc_zf
 ############################################################
-PROGRAM = pnc_zf
-BIN_DIR = bin
-OBJS = 
-COMM_OBJS = 
+BIN_DIR := bin
+COMM_OBJS := 
 
-all: $(BIN_DIR) $(PROGRAM)
+PROGRAM := pnc_zf
+OBJS := pnc_zf.o
 
-$(BIN_DIR):
-	@[ -d $@ ] || mkdir $@ 
+GENCH_PROG := gen_ch
+GENCH_OBJS := gen_ch.o 
 
-# Main simulation program
-OBJS += pnc_zf.o
-
-#COMM_OBJS += channel.o
 COMM_OBJS += debug_log.o
-#COMM_OBJS += modulator.o
-#COMM_OBJS += random.o
-#COMM_OBJS += types.o
-#COMM_OBJS += CRelay.o
 COMM_OBJS += mimomac.o
 COMM_OBJS += zftwrelay.o
 
 
+all: $(PROGRAM) $(GENCH_PROG)
 
+$(BIN_DIR):
+	@[ -d $@ ] || mkdir $@ 
 
-$(PROGRAM): $(BIN_DIR)/$(PROGRAM)
+#
+# pnc_zf
+#
+$(PROGRAM): $(BIN_DIR) $(BIN_DIR)/$(PROGRAM)
 
 $(BIN_DIR)/$(PROGRAM): $(addprefix $(BIN_DIR)/, $(OBJS)) $(addprefix $(BIN_DIR)/, $(COMM_OBJS))
 	$(CXX) $(LIBS) -o $@ $^
+
+#
+# gen_ch
+#
+$(GENCH_PROG): $(BIN_DIR) $(BIN_DIR)/$(GENCH_PROG)
+
+$(BIN_DIR)/$(GENCH_PROG): $(addprefix $(BIN_DIR)/, $(GENCH_OBJS))
+	$(CXX) $(LIBS) -o $@ $^
+
+
 	
 $(BIN_DIR)/%.o: %.cpp
 	$(CXX) $(CFLAGS) $(SYMBOLS) $(INCLUDES) -c -o $@ $<
@@ -69,8 +76,7 @@ $(BIN_DIR)/%.o: %.cpp
 # 
 ############################################################
 
-
-.PHONY: all clean $(PROGRAM)
+.PHONY: all clean $(PROGRAM) $(GENCH_PROG)
 	
 clean:
 	@rm -rf dbglog1.txt dbglog2.txt $(BIN_DIR)
