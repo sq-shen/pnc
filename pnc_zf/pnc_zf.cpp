@@ -4,6 +4,7 @@
  *
  */
 
+#include <itpp/itstat.h>
 #include <itpp/itcomm.h>
 
 #include "../../comm/comm.h"
@@ -37,6 +38,13 @@ int sym_err(bvec bv_src, ivec iv_dem) {
 			err++;
 	}
 	return err;
+}
+
+double norm2_a_pinvH(vec a, cmat pinvH) {
+	cvec ca = to_cvec(a);
+	cmat pinvHt = transpose(pinvH);
+	cvec res = pinvHt * ca;
+	return energy(res);
 }
 
 
@@ -75,7 +83,7 @@ int main(int argc, char *argv[])
 	int num_user = 2;
 	int num_rx_ant = 2;
 
-	int block_num = 100;
+	int block_num = 1000;
 	int msg_len = 10000;
 	int sym_len = msg_len/2;  // QPSK
 
@@ -123,7 +131,7 @@ int main(int argc, char *argv[])
 		mimomac.set_H(read_H);
 	cmat H = mimomac.get_H();
 	cout<<"H="<<H<<endl;
-	log<<"H="<<H<<endl;
+	log<<"H=\n"<<H<<endl;
 
 	/////////////////////////////////////////////////
 	// PNC Relay
@@ -132,8 +140,13 @@ int main(int argc, char *argv[])
 	ZfTwRelay relay;
 	relay.set_H(H);
 	relay.init_dem_region(a, syms, syms);
+	cmat pinvH = relay.get_pinvH();
 //	relay.show_sp_constellation();
 //	relay.show_dem_regions();
+
+	double norm2 = norm2_a_pinvH(a, pinvH);
+	log<<"pinvH=\n"<<pinvH<<endl;
+	log<<"||a pinvH||^2 = "<<norm2<<endl;
 
 
 	/////////////////////////////////////////////////

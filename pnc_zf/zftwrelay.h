@@ -36,6 +36,12 @@ public:
 
 	// Set the channel matrix
 	void set_H(itpp::cmat &ch);
+	
+	// Calculate pseudo-inverse of H
+	void cal_pinvH();
+	
+	// Get the pseudo-inverse of H
+	itpp::cmat get_pinvH();
 
 	// Set the linear combination factor
 	void set_lincoeff(itpp::vec &a);
@@ -62,6 +68,9 @@ public:
 protected:
 	// Estimated channel matrix
 	itpp::cmat H;
+	
+	// Pseudo-inverse of H
+	itpp::cmat pinvH;
 
 	// Linear combination factor of the two transmitted signals
 	itpp::cvec lincoeff;
@@ -79,6 +88,11 @@ protected:
 
 inline void ZfTwRelay::set_H(itpp::cmat &ch) {
 	H = ch;
+	cal_pinvH();
+}
+
+inline itpp::cmat ZfTwRelay::get_pinvH() {
+	return pinvH;
 }
 
 inline void ZfTwRelay::set_lincoeff(itpp::cvec &a) {

@@ -21,6 +21,14 @@ ZfTwRelay::ZfTwRelay() {
 ZfTwRelay::~ZfTwRelay() {
 }
 
+void ZfTwRelay::cal_pinvH() {
+	// Get pseudo-inverse of H
+	cmat herm_H = hermitian_transpose(H);
+	cmat herm_H_H = herm_H * H;
+	cmat inv_herm_H_H = inv(herm_H_H);
+	pinvH = inv_herm_H_H * herm_H;
+}
+
 
 void ZfTwRelay::init_dem_region(vec &a, itpp::cvec &m1, itpp::cvec &m2) {
 	
@@ -139,19 +147,19 @@ ivec ZfTwRelay::pnc_demapping(Array<cvec> &mimo_output) {
 	res_label.set_size(mimo_output.size());
 	
 	// Get pseudo-inverse of H
-	cmat herm_H = hermitian_transpose(H);
-	cmat herm_H_H = herm_H * H;
-	cmat inv_herm_H_H = inv(herm_H_H);
-	cmat pinv_H = inv_herm_H_H * herm_H;
+	// cmat herm_H = hermitian_transpose(H);
+	// cmat herm_H_H = herm_H * H;
+	// cmat inv_herm_H_H = inv(herm_H_H);
+	// cmat pinvH = inv_herm_H_H * herm_H;
 
 	// cout<<"H="<<H<<endl;
-	// cout<<"pinv_H="<<pinv_H<<endl;
-	// cout<<"pinv_H_H"<<pinv_H * H<<endl;
+	// cout<<"pinvH="<<pinvH<<endl;
+	// cout<<"pinvH_H"<<pinvH * H<<endl;
 	
 	// 
 	for(int i=0; i<mimo_output.size(); i++) {
 		cvec in = mimo_output(i);
-		complex<double> transformed_symbol = lincoeff * (pinv_H * in);
+		complex<double> transformed_symbol = lincoeff * (pinvH * in);
 		
 		int idx = get_region_idx(transformed_symbol);
 		res_label(i) = dem_regions(idx).label;
