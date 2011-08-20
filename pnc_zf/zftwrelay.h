@@ -40,6 +40,9 @@ public:
 	// Calculate pseudo-inverse of H
 	void cal_pinvH();
 	
+	// Calculate mmse detector
+	itpp::cmat cal_mmseG(double N0);
+
 	// Get the pseudo-inverse of H
 	itpp::cmat get_pinvH();
 
@@ -57,6 +60,12 @@ public:
 	//
 	itpp::ivec pnc_demapping(itpp::Array<itpp::cvec> &mimo_out);
 	
+	//
+	itpp::ivec pnc_zf_hard(itpp::Array<itpp::cvec> &mimo_out, itpp::QAM &qam);
+
+	//
+	itpp::ivec pnc_mmse_hard(itpp::Array<itpp::cvec> &mimo_out, double N0, itpp::QAM &qam);
+
 	/*
 	 *	Testing functions
 	 */

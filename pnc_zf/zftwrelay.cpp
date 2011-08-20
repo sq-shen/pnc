@@ -29,6 +29,19 @@ void ZfTwRelay::cal_pinvH() {
 	pinvH = inv_herm_H_H * herm_H;
 }
 
+cmat ZfTwRelay::cal_mmseG(double N0) {
+
+	cvec cv_ones = ones_c(2);
+	cmat herm_H = hermitian_transpose(H);
+	cmat herm_H_H = herm_H * H;
+	cmat N0_herm_H_H = herm_H_H + N0*diag(cv_ones);
+	cmat inv_N0_herm_H_H = inv(N0_herm_H_H);
+	cmat G = inv_N0_herm_H_H * herm_H;
+
+	return G;
+
+}
+
 
 void ZfTwRelay::init_dem_region(vec &a, itpp::cvec &m1, itpp::cvec &m2) {
 	
@@ -169,6 +182,42 @@ ivec ZfTwRelay::pnc_demapping(Array<cvec> &mimo_output) {
 	return res_label;
 }
 
+ivec ZfTwRelay::pnc_zf_hard(Array<itpp::cvec> &mimo_out, QAM &qam) {
+
+	ivec res_label;
+	res_label.set_size(mimo_out.size());
+
+	//
+	for(int i=0; i<mimo_out.size(); i++) {
+		cvec in = mimo_out(i);
+		cvec zfed_sig = pinvH * in;
+		ivec dem_sym = qam.demodulate(zfed_sig);
+
+		res_label(i) = dem_sym(0) ^ dem_sym(1);
+	}
+
+
+	return res_label;
+}
+
+ivec ZfTwRelay::pnc_mmse_hard(Array<itpp::cvec> &mimo_out, double N0, QAM &qam) {
+
+	ivec res_label;
+	res_label.set_size(mimo_out.size());
+
+	cmat G = cal_mmseG(N0);
+
+	//
+	for(int i=0; i<mimo_out.size(); i++) {
+		cvec in = mimo_out(i);
+		cvec zfed_sig = G * in;
+		ivec dem_sym = qam.demodulate(zfed_sig);
+		res_label(i) = dem_sym(0) ^ dem_sym(1);
+	}
+
+
+	return res_label;
+}
 
 void ZfTwRelay::show_sp_constellation() {
 	cout<<"sp_constellation: "<<endl;
