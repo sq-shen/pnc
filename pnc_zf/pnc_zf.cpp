@@ -88,27 +88,25 @@ int main(int argc, char *argv[])
 
 	int block_num = 100;
 	int msg_len = 10000;
+	int sym_len = msg_len/2;  // QPSK
 
 	vec EsN0dB  = linspace(11,20,10);	
 	
 
 	if(!is_fixed_H) {
 		block_num = 10000;
-		msg_len = 100;	
-		EsN0dB  = linspace(11,30,20);	// fading
+		msg_len = 1000;
+		sym_len = msg_len/2;  // QPSK
+		EsN0dB  = linspace(0,35,36);	// fading
 	}
-
-	int sym_len = msg_len/2;  // QPSK
-
-	double Es = 1;
-
 	
+	double Es = 1;
 
 	vec EsN0    = inv_dB(EsN0dB);
 	vec N0      = Es * pow(EsN0, -1.0);
 	vec sqrt_N0 = sqrt(N0);
 	vec sigma2  = N0/2;
-	vec sigma   = sqrt(sigma);
+	vec sigma   = sqrt(sigma2);
 	
 	cout<<sigma<<endl;
 

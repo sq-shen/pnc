@@ -74,14 +74,20 @@ int main(int argc, char *argv[])
 	int num_user = 2;
 	int num_rx_ant = 2;
 
-	int block_num = 10000;
-	int msg_len = 100;
+	int block_num = 100;
+	int msg_len = 10000;
 	int sym_len = msg_len/2;  // QPSK
 
 	double Es = 1;
-
-	//vec EsN0dB  = linspace(0,20,21);
-	vec EsN0dB  = linspace(11,30,20);
+	
+	vec EsN0dB  = linspace(11,20,10);
+	
+	if(!is_fixed_H) {
+		block_num = 10000;
+		msg_len = 1000;	
+		sym_len = msg_len/2;  // QPSK
+		EsN0dB  = linspace(0,35,36);	// fading
+	}
 
 	vec EsN0    = inv_dB(EsN0dB);
 	vec N0      = Es * pow(EsN0, -1.0);
@@ -172,8 +178,8 @@ int main(int argc, char *argv[])
 			//======================================
 			// PNC Demapping
 			//======================================
-			ivec dem_sym = relay.pnc_zf_hard(mimo_output, qam);
-			//ivec dem_sym = relay.pnc_mmse_hard(mimo_output, N0(i), qam);
+			//ivec dem_sym = relay.pnc_zf_hard(mimo_output, qam);
+			ivec dem_sym = relay.pnc_mmse_hard(mimo_output, N0(i), qam);
 
 			// cout<<"bv_msg_xor="<<bv_msg_xor<<endl;
 			// cout<<"dem_sym="<<dem_sym<<endl;

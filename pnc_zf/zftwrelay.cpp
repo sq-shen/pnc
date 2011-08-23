@@ -186,7 +186,7 @@ void ZfTwRelay::init_dem_region(vec &a, itpp::cvec &m1, itpp::cvec &m2) {
 	 * ---+---+---
 	 *  0 | 1 | 2
 	 */
-	double max_a = abs(itpp::max(a));
+	double max_a = max(abs(a));
 	xbndry(0) = -max_a * sqrt(2)/2;
 	xbndry(1) =  max_a * sqrt(2)/2;
 	ybndry(0) = -max_a * sqrt(2)/2;
@@ -200,7 +200,7 @@ void ZfTwRelay::init_dem_region(vec &a, itpp::cvec &m1, itpp::cvec &m2) {
 
 		/*
 		 *	min_x = numeric_limits<double>::min()
-		 *	man_x = xbndry(0)
+		 *	max_x = xbndry(0)
 		 *
 		 *	min_y = numeric_limits<double>::min()
 		 *	max_y = ybndry(0)
