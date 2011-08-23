@@ -47,17 +47,16 @@ double norm2_a_pinvH(vec a, cmat pinvH) {
 int main(int argc, char *argv[])
 {
 	cmat read_H;
-	bool is_genH = false;
+	bool is_fixed_H = false;
 	if(argc>=2) {
 		it_file ff;
 		ff.open(argv[1]);
 		ff>>Name("H")>>read_H;
 		ff.close();
+		is_fixed_H = true;
 		cout<<"Read H: "<<read_H<<endl;
-	} else {
-		cout<<"usage: pnc_hard [H file]"<<endl;
-		return 1;
-	}
+		
+	} 
 
 	RNG_randomize();
 	Real_Timer tt;
@@ -75,14 +74,14 @@ int main(int argc, char *argv[])
 	int num_user = 2;
 	int num_rx_ant = 2;
 
-	int block_num = 1000;
-	int msg_len = 10000;
+	int block_num = 10000;
+	int msg_len = 100;
 	int sym_len = msg_len/2;  // QPSK
 
 	double Es = 1;
 
-	vec EsN0dB  = linspace(0,20,21);
-//	vec EsN0dB  = linspace(19,20,2);	// test
+	//vec EsN0dB  = linspace(0,20,21);
+	vec EsN0dB  = linspace(11,30,20);
 
 	vec EsN0    = inv_dB(EsN0dB);
 	vec N0      = Es * pow(EsN0, -1.0);
@@ -108,7 +107,7 @@ int main(int argc, char *argv[])
 	// Channel initialization
 	/////////////////////////////////////////////////
 	MimoMac mimomac(num_user, num_rx_ant);
-	if(is_genH)
+	if(!is_fixed_H)
 		mimomac.genH();
 	else
 		mimomac.set_H(read_H);
@@ -159,6 +158,13 @@ int main(int argc, char *argv[])
 			//======================================
 			// channel
 			//======================================
+			if(!is_fixed_H) {
+				mimomac.genH();
+				H = mimomac.get_H();
+				relay.set_H(H);
+				//a = relay.calc_opt_lincoeff();
+				//relay.init_dem_region(a, syms, syms);
+			}
 			mimomac.set_N0(N0(i));
 			Array<cvec> mimo_output = mimomac.channel(mimo_input);
 
@@ -166,8 +172,8 @@ int main(int argc, char *argv[])
 			//======================================
 			// PNC Demapping
 			//======================================
-//			ivec dem_sym = relay.pnc_zf_hard(mimo_output, qam);
-			ivec dem_sym = relay.pnc_mmse_hard(mimo_output, N0(i), qam);
+			ivec dem_sym = relay.pnc_zf_hard(mimo_output, qam);
+			//ivec dem_sym = relay.pnc_mmse_hard(mimo_output, N0(i), qam);
 
 			// cout<<"bv_msg_xor="<<bv_msg_xor<<endl;
 			// cout<<"dem_sym="<<dem_sym<<endl;

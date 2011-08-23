@@ -88,12 +88,21 @@ int main(int argc, char *argv[])
 
 	int block_num = 100;
 	int msg_len = 10000;
+
+	vec EsN0dB  = linspace(11,20,10);	
+	
+
+	if(!is_fixed_H) {
+		block_num = 10000;
+		msg_len = 100;	
+		EsN0dB  = linspace(11,30,20);	// fading
+	}
+
 	int sym_len = msg_len/2;  // QPSK
 
 	double Es = 1;
 
-	vec EsN0dB  = linspace(0,20,21);
-	//vec EsN0dB  = linspace(11,20,10);	// test
+	
 
 	vec EsN0    = inv_dB(EsN0dB);
 	vec N0      = Es * pow(EsN0, -1.0);
@@ -187,6 +196,7 @@ int main(int argc, char *argv[])
 			//======================================
 			if(!is_fixed_H) {
 				mimomac.genH();
+				H = mimomac.get_H();
 				relay.set_H(H);
 				a = relay.calc_opt_lincoeff();
 				relay.init_dem_region(a, syms, syms);
