@@ -7,8 +7,6 @@
 #include <itpp/itstat.h>
 #include <itpp/itcomm.h>
 
-#include "../../comm/comm.h"
-#include "../../comm/debug_log.h"
 #include "mimomac.h"
 #include "zftwrelay.h"
 
@@ -50,21 +48,26 @@ double norm2_a_pinvH(vec a, cmat pinvH) {
 
 int main(int argc, char *argv[]) 
 {
-	int a1=1, a2=1;
-	if(argc>=3) {
-		a1 = atoi(argv[1]);
-		a2 = atoi(argv[2]);
-	}
-	
+	// Fixed channel matrix from file
 	cmat read_H;
 	bool is_genH = true;
-	if(argc>=4) {
+	if(argc>=2) {
 		it_file ff;
-		ff.open(argv[3]);
+		ff.open(argv[1]);
 		ff>>Name("H")>>read_H;
 		ff.close();	
 		cout<<"Read H: "<<read_H<<endl;
 		is_genH = false;
+	}
+	
+	// Fixed a
+	vec a;
+	a.set_size(2);
+	bool is_assigned_a = false;
+	if(argc>=4) {
+		a(0) = atoi(argv[2]);
+		a(1) = atoi(argv[3]);
+		is_assigned_a = true;
 	}
 
 	RNG_randomize();
@@ -90,13 +93,15 @@ int main(int argc, char *argv[])
 	double Es = 1;
 
 	vec EsN0dB  = linspace(0,20,21);
-//	vec EsN0dB  = linspace(19,20,2);	// test
+	//vec EsN0dB  = linspace(11,20,10);	// test
 
 	vec EsN0    = inv_dB(EsN0dB);
 	vec N0      = Es * pow(EsN0, -1.0);
 	vec sqrt_N0 = sqrt(N0);
 	vec sigma2  = N0/2;
 	vec sigma   = sqrt(sigma);
+	
+	cout<<sigma<<endl;
 
 
 	bvec bv_msg_u1, bv_msg_u2;
@@ -105,14 +110,7 @@ int main(int argc, char *argv[])
 	cvec cv_tx_sym_u1, cv_tx_sym_u2;
 	cvec cv_rx_sym;
 	
-	/////////////////////////////////////////////////
-	// Linear combination coefficient
-	/////////////////////////////////////////////////
-	vec a;
-	a.set_size(2);
-	a(0)=a1; a(1)=a2;
-	cout<<"a="<<a<<endl;
-	log<<"a="<<a<<endl;
+
 	
 	/////////////////////////////////////////////////
 	// Users' modulators
@@ -139,12 +137,17 @@ int main(int argc, char *argv[])
 	/////////////////////////////////////////////////
 	ZfTwRelay relay;
 	relay.set_H(H);
+	if(!is_assigned_a) {
+		a = relay.calc_opt_lincoeff();
+	}
 	relay.init_dem_region(a, syms, syms);
 	cmat pinvH = relay.get_pinvH();
 //	relay.show_sp_constellation();
 //	relay.show_dem_regions();
 
 	double norm2 = norm2_a_pinvH(a, pinvH);
+	cout<<"a="<<a<<endl;
+	log<<"a="<<a<<endl;
 	log<<"pinvH=\n"<<pinvH<<endl;
 	log<<"||a pinvH||^2 = "<<norm2<<endl;
 

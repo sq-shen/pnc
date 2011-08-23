@@ -4,7 +4,8 @@
  *  Created on: Aug 13, 2011
  *      Author: ivan
  */
-
+#include <limits>
+ 
 #include "zftwrelay.h"
 
 using namespace itpp;
@@ -41,6 +42,117 @@ cmat ZfTwRelay::cal_mmseG(double N0) {
 	return G;
 
 }
+
+
+vec ZfTwRelay::calc_opt_lincoeff() {
+	
+	// Get (H*H)^-1
+	cmat herm_H = hermitian_transpose(H);
+	cmat herm_H_H = herm_H * H;
+	cmat inv_herm_H_H = inv(herm_H_H);
+	
+	// variables
+	double p = inv_herm_H_H(0, 0).real();
+	double r = inv_herm_H_H(1, 1).real();
+	double s = 2 * inv_herm_H_H(0, 1).real();
+	
+	double min_val, min_b1, min_b2;
+	double val, tmpb, b1, b2;
+	
+	//-----------------------------
+	// Try b1 = 1
+	//-----------------------------
+	min_b1 = 1;
+	tmpb = -s/(2*r);
+	if(tmpb <= -1 || tmpb >= 1) {
+		min_b2 = tmpb;
+		min_val = (4*p*r - s*s) / (4*r);
+	} else if(tmpb >= 0) {
+		min_b2 = 1;
+		min_val = p+r+s;
+	} else {
+		min_b2 = -1;
+		min_val = p+r-s;
+	}
+	
+	
+
+	//-----------------------------
+	// Try b1 = -1
+	//-----------------------------
+	b1 = -1;
+	tmpb = s/(2*r);
+	if(tmpb <= -1 || tmpb >= 1) {
+		b2 = tmpb;
+		val = (4*p*r - s*s) / (4*r);
+	} else if(tmpb >= 0) {
+		b2 = 1;
+		val = p+r-s;
+	} else {
+		b2 = -1;
+		val = p+r+s;
+	}
+	
+	if(val<min_val) {
+		min_val = val;
+		min_b1 = b1;
+		min_b2 = b2;
+	}
+	
+	
+	//-----------------------------
+	// Try b2 = 1
+	//-----------------------------
+	b2 = 1;
+	tmpb = -s/(2*p);
+	if(tmpb <= -1 || tmpb >= 1) {
+		b1 = tmpb;
+		val = (4*p*r - s*s) / (4*p);
+	} else if(tmpb >= 0) {
+		b1 = 1;
+		val = p+r+s;
+	} else {
+		b1 = -1;
+		val = p+r-s;
+	}
+	
+	if(val<min_val) {
+		min_val = val;
+		min_b1 = b1;
+		min_b2 = b2;
+	}
+	
+	
+	//-----------------------------
+	// Try b2 = -1
+	//-----------------------------
+	b2 = -1;
+	tmpb = s/(2*p);
+	if(tmpb <= -1 || tmpb >= 1) {
+		b1 = tmpb;
+		val = (4*p*r - s*s) / (4*p);
+	} else if(tmpb >= 0) {
+		b1 = 1;
+		val = p+r-s;
+	} else {
+		b1 = -1;
+		val = p+r+s;
+	}
+	
+	if(val<min_val) {
+		min_val = val;
+		min_b1 = b1;
+		min_b2 = b2;
+	}
+	
+
+	vec a_hat;
+	a_hat.set_size(2);
+	a_hat(0) = min_b1;
+	a_hat(1) = min_b2;
+	return a_hat;
+}
+
 
 
 void ZfTwRelay::init_dem_region(vec &a, itpp::cvec &m1, itpp::cvec &m2) {

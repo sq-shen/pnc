@@ -46,7 +46,6 @@ SEARCHA_OBJS := search_a.o
 PNCHARD_PROG := pnc_hard
 PNCHARD_OBJS := pnc_hard.o
 
-COMM_OBJS += debug_log.o
 COMM_OBJS += mimomac.o
 COMM_OBJS += zftwrelay.o
 

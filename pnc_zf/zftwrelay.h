@@ -49,6 +49,9 @@ public:
 	// Set the linear combination factor
 	void set_lincoeff(itpp::vec &a);
 	void set_lincoeff(itpp::cvec &a);
+	
+	// Calculate optimized a
+	itpp::vec calc_opt_lincoeff();
 
 
 	// Initialize demodulation region
