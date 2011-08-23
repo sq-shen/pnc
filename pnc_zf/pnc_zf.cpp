@@ -50,14 +50,14 @@ int main(int argc, char *argv[])
 {
 	// Fixed channel matrix from file
 	cmat read_H;
-	bool is_genH = true;
+	bool is_fixed_H = false;
 	if(argc>=2) {
 		it_file ff;
 		ff.open(argv[1]);
 		ff>>Name("H")>>read_H;
 		ff.close();	
 		cout<<"Read H: "<<read_H<<endl;
-		is_genH = false;
+		is_fixed_H = true;
 	}
 	
 	// Fixed a
@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
 	int num_user = 2;
 	int num_rx_ant = 2;
 
-	int block_num = 1000;
+	int block_num = 100;
 	int msg_len = 10000;
 	int sym_len = msg_len/2;  // QPSK
 
@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
 	// Channel initialization
 	/////////////////////////////////////////////////
 	MimoMac mimomac(num_user, num_rx_ant);
-	if(is_genH)
+	if(!is_fixed_H)
 		mimomac.genH();
 	else
 		mimomac.set_H(read_H);
@@ -185,6 +185,12 @@ int main(int argc, char *argv[])
 			//======================================
 			// channel
 			//======================================
+			if(!is_fixed_H) {
+				mimomac.genH();
+				relay.set_H(H);
+				a = relay.calc_opt_lincoeff();
+				relay.init_dem_region(a, syms, syms);
+			}
 			mimomac.set_N0(N0(i));
 			Array<cvec> mimo_output = mimomac.channel(mimo_input);
 
