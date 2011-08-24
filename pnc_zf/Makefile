@@ -8,7 +8,7 @@ LIBS := -lm -litpp -lfftw3 -llapack -lblas
 DEBUG = 1
 
 ifeq ($(DEBUG),1)
-	CFLAGS  += -g -Wall -DNDEBUG -O3 -pipe
+	CFLAGS  += -g -Wall -DNDEBUG -pipe
 	
 	SYMBOLS += -DDBGSHOW
 	SYMBOLS += -DCHECKNUM
@@ -17,7 +17,7 @@ ifeq ($(DEBUG),1)
 endif
 
 ifeq ($(DEBUG),0)
-	CFLAGS  += -Wall
+	CFLAGS  += -Wall -O3
 endif
 
 

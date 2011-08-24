@@ -90,7 +90,8 @@ int main(int argc, char *argv[])
 	int msg_len = 10000;
 	int sym_len = msg_len/2;  // QPSK
 
-	vec EsN0dB  = linspace(11,20,10);	
+	//vec EsN0dB  = linspace(11,20,10);
+	vec EsN0dB  = linspace(11,11,1); //test
 	
 
 	if(!is_fixed_H) {
@@ -149,8 +150,8 @@ int main(int argc, char *argv[])
 	}
 	relay.init_dem_region(a, syms, syms);
 	cmat pinvH = relay.get_pinvH();
-//	relay.show_sp_constellation();
-//	relay.show_dem_regions();
+	relay.show_sp_constellation();
+	relay.show_dem_regions();
 
 	double norm2 = norm2_a_pinvH(a, pinvH);
 	cout<<"a="<<a<<endl;
