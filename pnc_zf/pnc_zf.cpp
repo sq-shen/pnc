@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
 	int sym_len = msg_len/2;  // QPSK
 
 	//vec EsN0dB  = linspace(11,20,10);
-	vec EsN0dB  = linspace(11,11,1); //test
+	vec EsN0dB  = linspace(5,15,11); //test
 	
 
 	if(!is_fixed_H) {

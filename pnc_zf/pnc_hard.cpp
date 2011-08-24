@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 
 	double Es = 1;
 	
-	vec EsN0dB  = linspace(11,20,10);
+	vec EsN0dB  = linspace(5,15,11);
 	
 	if(!is_fixed_H) {
 		block_num = 10000;
