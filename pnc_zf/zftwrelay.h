@@ -53,6 +53,8 @@ public:
 	// Calculate optimized a
 	itpp::vec calc_opt_lincoeff();
 
+	// Initialize superimposed constellation
+	void init_sp_const(itpp::cvec &comb_coeff, itpp::cvec &m1, itpp::cvec &m2);
 
 	// Initialize demodulation region
 	void init_dem_region(itpp::vec &a, itpp::cvec &m1, itpp::cvec &m2);
@@ -63,11 +65,20 @@ public:
 	//
 	itpp::ivec pnc_demapping(itpp::Array<itpp::cvec> &mimo_out);
 	
-	//
-	itpp::ivec pnc_zf_hard(itpp::Array<itpp::cvec> &mimo_out, itpp::QAM &qam);
+	// Get Rayleigh quotient; lambda are in increasing order
+	bool ralgh_quot(itpp::vec &lambda, itpp::Array<itpp::cvec> &eigvec);
 
 	//
-	itpp::ivec pnc_mmse_hard(itpp::Array<itpp::cvec> &mimo_out, double N0, itpp::QAM &qam);
+	itpp::ivec pnc_ml_demapping(itpp::cvec &a, itpp::Array<itpp::cvec> &mimo_out);
+
+	//
+	itpp::ivec nc_zf_demapping(itpp::Array<itpp::cvec> &mimo_out, itpp::QAM &qam);
+
+	//
+	itpp::ivec nc_mmse_demapping(itpp::Array<itpp::cvec> &mimo_out, double N0, itpp::QAM &qam);
+
+	//
+	itpp::ivec nc_ml_demapping(itpp::Array<itpp::cvec> &mimo_out, itpp::QAM &qam);
 
 	/*
 	 *	Testing functions

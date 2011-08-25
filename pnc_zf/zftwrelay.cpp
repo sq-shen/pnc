@@ -5,7 +5,8 @@
  *      Author: ivan
  */
 #include <limits>
- 
+#include <itpp/itstat.h>
+
 #include "zftwrelay.h"
 
 using namespace itpp;
@@ -153,6 +154,28 @@ vec ZfTwRelay::calc_opt_lincoeff() {
 	return a_hat;
 }
 
+void ZfTwRelay::init_sp_const(itpp::cvec &comb_coeff, itpp::cvec &m1, itpp::cvec &m2) {
+
+	// Generate the superimposed points
+	int k = 0;
+	cvec orin_pt = zeros_c(2);
+	for(int i=0; i<m1.size(); i++) {
+		orin_pt(0) = m1(i);
+		for(int j=0; j<m2.size(); j++) {
+			orin_pt(1) = m2(j);
+
+			complex<double> pt = comb_coeff * ( H * orin_pt );
+			int label = (i^j) & 0x03; // xor
+			//cout<<i<<","<<j<<","<<label<<endl;
+
+			sp_constellation(k).pt    = pt;
+			sp_constellation(k).label = label;
+			k++;
+		}
+	}
+
+}
+
 
 
 void ZfTwRelay::init_dem_region(vec &a, itpp::cvec &m1, itpp::cvec &m2) {
@@ -266,6 +289,63 @@ int ZfTwRelay::get_region_idx(std::complex<double> symbol) {
 }
 
 
+bool ZfTwRelay::ralgh_quot(vec &lambda, Array<cvec> &eigvec) {
+
+	// (H*H)^{-1}
+	cmat herm_H = hermitian_transpose(H);
+	cmat H_herm_H = H * herm_H;
+	cmat inv_H_herm_H = inv(H_herm_H);
+
+	vec eigval;
+	cmat V;
+    bool res = eig_sym(inv_H_herm_H , eigval, V);
+
+    if(!res)
+    	return false;
+
+    // increasing order
+    ivec idxs = sort_index(eigval);
+
+    lambda.set_size(eigval.size());
+    eigvec.set_size(V.cols());
+    for(int i=0; i<idxs.size(); i++) {
+    	lambda(i) = eigval(idxs(i));
+    	eigvec(i) = V.get_col(idxs(i));
+    }
+
+    return true;
+}
+
+
+ivec ZfTwRelay::pnc_ml_demapping(cvec &a, Array<itpp::cvec> &mimo_out) {
+
+	ivec res_label;
+	res_label.set_size(mimo_out.size());
+
+	for(int i=0; i<mimo_out.size(); i++) {
+
+		complex<double> aYr = a * mimo_out(i);
+
+		double min_norm = numeric_limits<double>::max();
+		int min_pt = -1;
+
+		for(int j=0; j<sp_constellation.size(); j++) {
+			complex<double> pt = sp_constellation(j).pt;
+			complex<double> diff = aYr - pt;
+			double calc_norm = diff.real() * diff.real() + diff.imag() * diff.imag();
+			if(calc_norm < min_norm) {
+				min_norm = calc_norm;
+				min_pt = sp_constellation(j).label;
+			}
+		}
+
+		res_label(i) = min_pt;
+	}
+
+	return res_label;
+}
+
+
 ivec ZfTwRelay::pnc_demapping(Array<cvec> &mimo_output) {
 
 	ivec res_label;
@@ -294,7 +374,15 @@ ivec ZfTwRelay::pnc_demapping(Array<cvec> &mimo_output) {
 	return res_label;
 }
 
-ivec ZfTwRelay::pnc_zf_hard(Array<itpp::cvec> &mimo_out, QAM &qam) {
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Traditional Network Coding
+//
+///////////////////////////////////////////////////////////////////////////////
+
+ivec ZfTwRelay::nc_zf_demapping(Array<itpp::cvec> &mimo_out, QAM &qam) {
 
 	ivec res_label;
 	res_label.set_size(mimo_out.size());
@@ -312,7 +400,7 @@ ivec ZfTwRelay::pnc_zf_hard(Array<itpp::cvec> &mimo_out, QAM &qam) {
 	return res_label;
 }
 
-ivec ZfTwRelay::pnc_mmse_hard(Array<itpp::cvec> &mimo_out, double N0, QAM &qam) {
+ivec ZfTwRelay::nc_mmse_demapping(Array<itpp::cvec> &mimo_out, double N0, QAM &qam) {
 
 	ivec res_label;
 	res_label.set_size(mimo_out.size());
@@ -330,6 +418,43 @@ ivec ZfTwRelay::pnc_mmse_hard(Array<itpp::cvec> &mimo_out, double N0, QAM &qam) 
 
 	return res_label;
 }
+
+ivec ZfTwRelay::nc_ml_demapping(itpp::Array<itpp::cvec> &mimo_out, itpp::QAM &qam) {
+
+	ivec res_label;
+	res_label.set_size(mimo_out.size());
+
+	cvec symbols = qam.get_symbols();
+
+	for(int i=0; i<mimo_out.size(); i++) {
+
+		cvec Yr = mimo_out(i);
+		cvec X = zeros_c(2);
+
+		double min_norm = numeric_limits<double>::max();
+		int min_pt = -1;
+
+
+		for(int q=0; q<symbols.size(); q++) {
+			X(0) = symbols(q);
+			for(int r=0; r<symbols.size(); r++) {
+				X(1) = symbols(r);
+				cvec HX = H * X;
+				double calc_norm = norm(Yr-HX);
+				if(calc_norm < min_norm) {
+					min_norm = calc_norm;
+					min_pt = (q^r) & 0x03; // xor
+				}
+			}
+		}
+
+		res_label(i) = min_pt;
+	}
+
+	return res_label;
+
+}
+
 
 void ZfTwRelay::show_sp_constellation() {
 	cout<<"sp_constellation: "<<endl;

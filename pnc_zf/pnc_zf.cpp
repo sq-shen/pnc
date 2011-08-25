@@ -150,8 +150,8 @@ int main(int argc, char *argv[])
 	}
 	relay.init_dem_region(a, syms, syms);
 	cmat pinvH = relay.get_pinvH();
-	relay.show_sp_constellation();
-	relay.show_dem_regions();
+//	relay.show_sp_constellation();
+//	relay.show_dem_regions();
 
 	double norm2 = norm2_a_pinvH(a, pinvH);
 	cout<<"a="<<a<<endl;

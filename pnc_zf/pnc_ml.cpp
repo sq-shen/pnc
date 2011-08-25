@@ -1,5 +1,7 @@
 /**
- * PNC-MIMO with ZF & MMSE hard decoding
+ *	Simulation of PNC-ML using IT++
+ *	Two antennas in the relay
+ *
  */
 
 #include <itpp/itstat.h>
@@ -12,7 +14,7 @@ using namespace itpp;
 using namespace std;
 
 Array<cvec> to_mimo_input(Array<cvec> &user_input) {
-
+	
 	int sym_len = user_input(0).size();
 	Array<cvec> mimo_in(sym_len);
 	for(int i=0; i<sym_len; i++) {
@@ -22,7 +24,7 @@ Array<cvec> to_mimo_input(Array<cvec> &user_input) {
 		}
 		mimo_in(i) = in;
 	}
-
+	
 	return mimo_in;
 }
 
@@ -36,27 +38,27 @@ int sym_err(bvec bv_src, ivec iv_dem) {
 	return err;
 }
 
-double norm2_a_pinvH(vec a, cmat pinvH) {
-	cvec ca = to_cvec(a);
+double norm2_a_pinvH(cvec a, cmat pinvH) {
 	cmat pinvHt = transpose(pinvH);
-	cvec res = pinvHt * ca;
+	cvec res = pinvHt * a;
 	return energy(res);
 }
 
 
-int main(int argc, char *argv[])
+int main(int argc, char *argv[]) 
 {
+	// Fixed channel matrix from file
 	cmat read_H;
 	bool is_fixed_H = false;
 	if(argc>=2) {
 		it_file ff;
 		ff.open(argv[1]);
 		ff>>Name("H")>>read_H;
-		ff.close();
-		is_fixed_H = true;
+		ff.close();	
 		cout<<"Read H: "<<read_H<<endl;
-		
-	} 
+		is_fixed_H = true;
+	}
+	
 
 	RNG_randomize();
 	Real_Timer tt;
@@ -65,7 +67,7 @@ int main(int argc, char *argv[])
 
 	// log file
 	ofstream log;
-	log.open("log_hard.txt", ios::app|ios::out);
+	log.open("log_pnc_ml.txt", ios::app|ios::out);
 	log<<"==================================================================================================="<<endl;
 
 	//////////////////////////////////////////////////
@@ -78,36 +80,42 @@ int main(int argc, char *argv[])
 	int msg_len = 10000;
 	int sym_len = msg_len/2;  // QPSK
 
-	double Es = 1;
+	//vec EsN0dB  = linspace(11,20,10);
+	vec EsN0dB  = linspace(5,15,11); //test
 	
-	vec EsN0dB  = linspace(5,15,11);
-	
+
 	if(!is_fixed_H) {
 		block_num = 1000;
-		msg_len = 1000;	
+		msg_len = 1000;
 		sym_len = msg_len/2;  // QPSK
 		EsN0dB  = linspace(0,35,36);	// fading
 	}
+	
+	double Es = 1;
 
 	vec EsN0    = inv_dB(EsN0dB);
 	vec N0      = Es * pow(EsN0, -1.0);
 	vec sqrt_N0 = sqrt(N0);
 	vec sigma2  = N0/2;
-	vec sigma   = sqrt(sigma);
+	vec sigma   = sqrt(sigma2);
+	
+	cout<<sigma<<endl;
 
 
 	bvec bv_msg_u1, bv_msg_u2;
 	bvec bv_msg_xor;
-
+	
 	cvec cv_tx_sym_u1, cv_tx_sym_u2;
 	cvec cv_rx_sym;
+	
 
+	
 	/////////////////////////////////////////////////
 	// Users' modulators
 	/////////////////////////////////////////////////
 	QAM qam(4);                     //The 4-QAM modulator class
-	cvec syms = qam.get_symbols();
-	//cout<<"4-QAM constellation: "<<syms<<endl;
+	cvec qam_syms = qam.get_symbols();
+	//cout<<"4-QAM constellation: "<<qam_syms<<endl;
 
 	/////////////////////////////////////////////////
 	// Channel initialization
@@ -123,12 +131,28 @@ int main(int argc, char *argv[])
 
 	/////////////////////////////////////////////////
 	// PNC Relay
+	// Demapping region (x1 + x2)
 	/////////////////////////////////////////////////
 	ZfTwRelay relay;
+	vec lambda;
+	Array<cvec> eigvec;
+	cvec a = ones_c(2);
+
 	relay.set_H(H);
+	relay.ralgh_quot(lambda, eigvec);
+	a = eigvec(1);
+	relay.init_sp_const(a, qam_syms, qam_syms);
+
+	relay.show_sp_constellation();
+	relay.show_dem_regions();
+
 	cmat pinvH = relay.get_pinvH();
-//	relay.show_sp_constellation();
-//	relay.show_dem_regions();
+	double norm2 = norm2_a_pinvH(a, pinvH);
+
+	cout<<"a="<<a<<endl;
+	log<<"a="<<a<<endl;
+	log<<"pinvH=\n"<<pinvH<<endl;
+	log<<"||a pinvH||^2 = "<<norm2<<endl;
 
 
 	/////////////////////////////////////////////////
@@ -168,19 +192,18 @@ int main(int argc, char *argv[])
 				mimomac.genH();
 				H = mimomac.get_H();
 				relay.set_H(H);
-				//a = relay.calc_opt_lincoeff();
-				//relay.init_dem_region(a, syms, syms);
+				relay.ralgh_quot(lambda, eigvec);
+				a = eigvec(1);
+				relay.init_sp_const(a, qam_syms, qam_syms);
 			}
 			mimomac.set_N0(N0(i));
 			Array<cvec> mimo_output = mimomac.channel(mimo_input);
 
 
 			//======================================
-			// PNC Demapping
+			// PNC ML Demapping
 			//======================================
-			//ivec dem_sym = relay.nc_zf_demapping(mimo_output, qam);
-			ivec dem_sym = relay.nc_mmse_demapping(mimo_output, N0(i), qam);
-			//ivec dem_sym = relay.nc_ml_demapping(mimo_output, qam);
+			ivec dem_sym = relay.pnc_ml_demapping(a, mimo_output);
 
 			// cout<<"bv_msg_xor="<<bv_msg_xor<<endl;
 			// cout<<"dem_sym="<<dem_sym<<endl;

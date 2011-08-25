@@ -37,6 +37,9 @@ COMM_OBJS :=
 PROGRAM := pnc_zf
 OBJS := pnc_zf.o
 
+PNCML_PROG := pnc_ml
+PNCML_OBJS := pnc_ml.o
+
 GENCH_PROG := gen_ch
 GENCH_OBJS := gen_ch.o 
 
@@ -53,7 +56,7 @@ COMM_OBJS += mimomac.o
 COMM_OBJS += zftwrelay.o
 
 
-all: $(PROGRAM) $(GENCH_PROG) $(SEARCHA_PROG) $(PNCHARD_PROG) $(TESTEIGEN_PROG)
+all: $(PROGRAM) $(PNCML_PROG) $(GENCH_PROG) $(SEARCHA_PROG) $(PNCHARD_PROG) $(TESTEIGEN_PROG)
 
 $(BIN_DIR):
 	@[ -d $@ ] || mkdir $@ 
@@ -65,6 +68,15 @@ $(PROGRAM): $(BIN_DIR) $(BIN_DIR)/$(PROGRAM)
 
 $(BIN_DIR)/$(PROGRAM): $(addprefix $(BIN_DIR)/, $(OBJS)) $(addprefix $(BIN_DIR)/, $(COMM_OBJS))
 	$(CXX) $(LIBS) -o $@ $^
+	
+#
+# pnc_ml
+#
+$(PNCML_PROG): $(BIN_DIR) $(BIN_DIR)/$(PNCML_PROG)
+
+$(BIN_DIR)/$(PNCML_PROG): $(addprefix $(BIN_DIR)/, $(PNCML_OBJS)) $(addprefix $(BIN_DIR)/, $(COMM_OBJS))
+	$(CXX) $(LIBS) -o $@ $^
+
 
 #
 # gen_ch
@@ -110,7 +122,7 @@ $(BIN_DIR)/%.o: %.cpp
 # 
 ############################################################
 
-.PHONY: all clean $(PROGRAM) $(GENCH_PROG) $(SEARCHA_PROG) $(PNCHARD_PROG) $(TESTEIGEN_PROG)
+.PHONY: all clean $(PROGRAM) $(GENCH_PROG) $(SEARCHA_PROG) $(PNCHARD_PROG) $(TESTEIGEN_PROG) $(PNCML_PROG)
 	
 clean:
 	@rm -rf dbglog1.txt dbglog2.txt $(BIN_DIR)
