@@ -68,8 +68,21 @@ public:
 	// Get Rayleigh quotient; lambda are in increasing order
 	bool ralgh_quot(itpp::vec &lambda, itpp::Array<itpp::cvec> &eigvec);
 
+	// Get Rayleigh quotient; lambda are in increasing order
+	bool ralgh_quot(itpp::cmat &Q, itpp::vec &lambda, itpp::Array<itpp::cvec> &eigvec);
+
+	// Get the optimized factor of pnc-mmse linear combination
+	itpp::cvec pnc_mmse_a(double N0);
+
+	// Calculate R_y
+	itpp::cmat calc_Ry(double N0);
+
+	// Get PNC-MMSE detector
+	itpp::cvec pnc_mmse_detector(itpp::cvec &a, itpp::cmat Ry);
+
 	//
 	itpp::ivec pnc_ml_demapping(itpp::cvec &a, itpp::Array<itpp::cvec> &mimo_out);
+
 
 	//
 	itpp::ivec nc_zf_demapping(itpp::Array<itpp::cvec> &mimo_out, itpp::QAM &qam);

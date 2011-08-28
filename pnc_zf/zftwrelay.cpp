@@ -317,6 +317,70 @@ bool ZfTwRelay::ralgh_quot(vec &lambda, Array<cvec> &eigvec) {
 }
 
 
+bool ZfTwRelay::ralgh_quot(cmat &Q, vec &lambda, Array<cvec> &eigvec) {
+
+	vec eigval;
+	cmat V;
+    bool res = eig_sym(Q , eigval, V);
+
+    if(!res)
+    	return false;
+
+    // increasing order
+    ivec idxs = sort_index(eigval);
+
+    lambda.set_size(eigval.size());
+    eigvec.set_size(V.cols());
+    for(int i=0; i<idxs.size(); i++) {
+    	lambda(i) = eigval(idxs(i));
+    	eigvec(i) = V.get_col(idxs(i));
+    }
+
+    return true;
+}
+
+cvec ZfTwRelay::pnc_mmse_a(double N0) {
+
+	// (H^*H + N_0 I)^{-1}
+	int ncol = H.cols();
+	cmat herm_H = hermitian_transpose(H);
+	cmat Q = H * herm_H;
+	Q += N0 * diag(ones_c(ncol));
+
+	vec lambda;
+	Array<cvec> eigvec;
+	bool res = ralgh_quot(Q, lambda, eigvec);
+	if(!res)
+		return false;
+
+	cvec a;
+	a = sqrt(2) * eigvec(0);
+	return a;
+}
+
+
+/**
+ * Calculate Ry once per channel change
+ */
+cmat ZfTwRelay::calc_Ry(double N0) {
+
+	int ncol = H.cols();
+	cmat herm_H = hermitian_transpose(H);
+	cmat Ry = H * herm_H;
+	Ry += N0 * diag(ones_c(ncol));
+
+	return Ry;
+}
+
+cvec ZfTwRelay::pnc_mmse_detector(cvec &a, cmat Ry) {
+	cmat iRy = inv(Ry);
+	cvec w = iRy * H * a;
+	cvec w_conj = conj(w);
+	return w_conj;
+}
+
+
+
 ivec ZfTwRelay::pnc_ml_demapping(cvec &a, Array<itpp::cvec> &mimo_out) {
 
 	ivec res_label;
@@ -344,7 +408,6 @@ ivec ZfTwRelay::pnc_ml_demapping(cvec &a, Array<itpp::cvec> &mimo_out) {
 
 	return res_label;
 }
-
 
 ivec ZfTwRelay::pnc_demapping(Array<cvec> &mimo_output) {
 
