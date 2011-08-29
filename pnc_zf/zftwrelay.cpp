@@ -375,12 +375,13 @@ cvec ZfTwRelay::pnc_mmse_a(double N0) {
 	vec lambda;
 	Array<cvec> eigvec;
 	bool res = ralgh_quot(Q, lambda, eigvec);
-	if(!res)
-		return false;
+	if(!res) {
+		return ones_c(2);
+	}
 
 	cvec a;
-	//a = sqrt(2) * eigvec(0);
-	a = eigvec(0);
+	a = sqrt(2) * eigvec(0);
+	//a = eigvec(0);
 	return a;
 }
 
@@ -406,7 +407,6 @@ cvec ZfTwRelay::pnc_mmse_detector(cvec &a, cmat Ry) {
 }
 
 
-
 ivec ZfTwRelay::pnc_ml_demapping(cvec &a, Array<itpp::cvec> &mimo_out) {
 
 	ivec res_label;
@@ -414,16 +414,21 @@ ivec ZfTwRelay::pnc_ml_demapping(cvec &a, Array<itpp::cvec> &mimo_out) {
 	
 	for(int i=0; i<mimo_out.size(); i++) {
 		vec norm2 = zeros(4);
+		double min_norm2 = numeric_limits<double>::max();
+		int min_pt = 0;
+		
 		complex<double> aYr = a * mimo_out(i);
 		for(int j=0; j<sp_constellation.size(); j++) {
 			complex<double> pt = sp_constellation(j).pt;
 			complex<double> diff = aYr - pt;
 			double calc_norm2 = diff.real() * diff.real() + diff.imag() * diff.imag();
-			norm2(sp_constellation(j).label) += calc_norm2;
+			
+			if(calc_norm2<min_norm2) {
+				min_norm2 = calc_norm2;
+				min_pt = sp_constellation(j).label;
+			}
 		}
 		
-		int min_pt = 0;
-		double min_norm2 = min(norm2, min_pt);
 		res_label(i) = min_pt;
 	}
 
