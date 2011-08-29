@@ -385,25 +385,20 @@ ivec ZfTwRelay::pnc_ml_demapping(cvec &a, Array<itpp::cvec> &mimo_out) {
 
 	ivec res_label;
 	res_label.set_size(mimo_out.size());
-
+	
 	for(int i=0; i<mimo_out.size(); i++) {
-
+		vec norm2 = zeros(4);
 		complex<double> aYr = a * mimo_out(i);
-
-		double min_norm = numeric_limits<double>::max();
-		int min_pt = -1;
-
 		for(int j=0; j<sp_constellation.size(); j++) {
 			complex<double> pt = sp_constellation(j).pt;
 			complex<double> diff = aYr - pt;
-			double calc_norm = diff.real() * diff.real() + diff.imag() * diff.imag();
-			if(calc_norm < min_norm) {
-				min_norm = calc_norm;
-				min_pt = sp_constellation(j).label;
-			}
+			double calc_norm2 = diff.real() * diff.real() + diff.imag() * diff.imag();
+			norm2(sp_constellation(j).label) += exp(-calc_norm2);
 		}
-
-		res_label(i) = min_pt;
+		
+		int max_pt = 0;
+		double max_norm2 = max(norm2, max_pt);
+		res_label(i) = max_pt;
 	}
 
 	return res_label;

@@ -36,25 +36,34 @@ public:
 
 	// Set the channel matrix
 	void set_H(itpp::cmat &ch);
-	
-	// Calculate pseudo-inverse of H
-	void cal_pinvH();
-	
+
 	// Calculate mmse detector
 	itpp::cmat cal_mmseG(double N0);
 
 	// Get the pseudo-inverse of H
 	itpp::cmat get_pinvH();
+		
+	// Initialize superimposed constellation
+	void init_sp_const(itpp::cvec &comb_coeff, itpp::cvec &m1, itpp::cvec &m2);
 
-	// Set the linear combination factor
+	// Get Rayleigh quotient; lambda are in increasing order
+	bool ralgh_quot(itpp::vec &lambda, itpp::Array<itpp::cvec> &eigvec);
+
+	// Get Rayleigh quotient; lambda are in increasing order
+	bool ralgh_quot(itpp::cmat &Q, itpp::vec &lambda, itpp::Array<itpp::cvec> &eigvec);
+
+	// Get superimposed constellation
+	itpp::Array<sp_pt> get_sp_constellation();
+	
+	// Calculate pseudo-inverse of H
+	void cal_pinvH();
+
+	 // Set the linear combination factor
 	void set_lincoeff(itpp::vec &a);
 	void set_lincoeff(itpp::cvec &a);
 	
 	// Calculate optimized a
 	itpp::vec calc_opt_lincoeff();
-
-	// Initialize superimposed constellation
-	void init_sp_const(itpp::cvec &comb_coeff, itpp::cvec &m1, itpp::cvec &m2);
 
 	// Initialize demodulation region
 	void init_dem_region(itpp::vec &a, itpp::cvec &m1, itpp::cvec &m2);
@@ -65,12 +74,9 @@ public:
 	//
 	itpp::ivec pnc_demapping(itpp::Array<itpp::cvec> &mimo_out);
 	
-	// Get Rayleigh quotient; lambda are in increasing order
-	bool ralgh_quot(itpp::vec &lambda, itpp::Array<itpp::cvec> &eigvec);
-
-	// Get Rayleigh quotient; lambda are in increasing order
-	bool ralgh_quot(itpp::cmat &Q, itpp::vec &lambda, itpp::Array<itpp::cvec> &eigvec);
-
+	/*
+	 *	PNC-MMSE functions
+	 */
 	// Get the optimized factor of pnc-mmse linear combination
 	itpp::cvec pnc_mmse_a(double N0);
 
@@ -79,11 +85,17 @@ public:
 
 	// Get PNC-MMSE detector
 	itpp::cvec pnc_mmse_detector(itpp::cvec &a, itpp::cmat Ry);
-
+	
+	/*
+	 *	PNC-ML
+	 */
 	//
 	itpp::ivec pnc_ml_demapping(itpp::cvec &a, itpp::Array<itpp::cvec> &mimo_out);
 
-
+	
+	/*
+	 *	NC functions
+	 */
 	//
 	itpp::ivec nc_zf_demapping(itpp::Array<itpp::cvec> &mimo_out, itpp::QAM &qam);
 
@@ -140,6 +152,10 @@ inline void ZfTwRelay::set_lincoeff(itpp::vec &a) {
 	for(int i=0; i<a.size(); i++) {
 		lincoeff(i) = a(i);
 	}
+}
+
+inline itpp::Array<sp_pt> ZfTwRelay::get_sp_constellation() {
+	return sp_constellation;
 }
 
 

@@ -86,12 +86,12 @@ int main(int argc, char *argv[])
 	int num_user = 2;
 	int num_rx_ant = 2;
 
-	int block_num = 100;
-	int msg_len = 10000;
+	int block_num = 1;
+	int msg_len = 10;
 	int sym_len = msg_len/2;  // QPSK
 
 	//vec EsN0dB  = linspace(11,20,10);
-	vec EsN0dB  = linspace(25,35,11); //test
+	vec EsN0dB  = linspace(15, 15, 1); //test
 	
 
 	if(!is_fixed_H) {
@@ -130,24 +130,18 @@ int main(int argc, char *argv[])
 	// Channel initialization
 	/////////////////////////////////////////////////
 	MimoMac mimomac(num_user, num_rx_ant);
-	if(!is_fixed_H)
-		mimomac.genH();
-	else
-		mimomac.set_H(read_H);
-	cmat H = mimomac.get_H();
-	cout<<"H="<<H<<endl;
-	log<<"H=\n"<<H<<endl;
+	mimomac.set_H(read_H);
+
 
 	/////////////////////////////////////////////////
 	// PNC Relay
 	// Demapping region (x1 + x2)
 	/////////////////////////////////////////////////
 	ZfTwRelay relay;
-	relay.set_H(H);
-
+	
 
 	cvec w_conj, a;
-	cmat Ry;
+	cmat H, Ry;
 
 	/////////////////////////////////////////////////
 	// Simulation
@@ -156,10 +150,17 @@ int main(int argc, char *argv[])
 	for(int i=0; i<EsN0dB.size(); i++) {
 
 		if(is_fixed_H) {
+			H = mimomac.get_H();
+			relay.set_H(H);
 			Ry = relay.calc_Ry(N0(i));
 			a = relay.pnc_mmse_a(N0(i));
 			w_conj = relay.pnc_mmse_detector(a, Ry);
 			relay.init_sp_const(w_conj, qam_syms, qam_syms);
+			
+			cout<<"Ry="<<Ry<<endl;
+			cout<<"a="<<a<<endl;
+			cout<<"w_conj="<<w_conj<<endl;
+			relay.show_sp_constellation();
 		}
 
 		int tot_sym = 0, err = 0;
@@ -205,7 +206,7 @@ int main(int argc, char *argv[])
 
 
 			//======================================
-			// PNC Demapping
+			// Use PNC-ML Demapping
 			//======================================
 			ivec dem_sym = relay.pnc_ml_demapping(w_conj, mimo_output);
 
