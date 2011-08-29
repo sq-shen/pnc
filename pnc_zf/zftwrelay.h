@@ -46,6 +46,9 @@ public:
 	// Initialize superimposed constellation
 	void init_sp_const(itpp::cvec &comb_coeff, itpp::cvec &m1, itpp::cvec &m2);
 
+	// Initialize superimposed constellation for pnc-mmse
+	void init_mmse_sp_const(itpp::cvec &comb_coeff, itpp::cvec &m1, itpp::cvec &m2);
+
 	// Get Rayleigh quotient; lambda are in increasing order
 	bool ralgh_quot(itpp::vec &lambda, itpp::Array<itpp::cvec> &eigvec);
 

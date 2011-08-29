@@ -176,6 +176,29 @@ void ZfTwRelay::init_sp_const(itpp::cvec &comb_coeff, itpp::cvec &m1, itpp::cvec
 
 }
 
+void ZfTwRelay::init_mmse_sp_const(itpp::cvec &comb_coeff, itpp::cvec &m1, itpp::cvec &m2) {
+
+	// Generate the superimposed points
+	int k = 0;
+	cvec a_conj = conj(comb_coeff);
+	cvec orin_pt = zeros_c(2);
+	for(int i=0; i<m1.size(); i++) {
+		orin_pt(0) = m1(i);
+		for(int j=0; j<m2.size(); j++) {
+			orin_pt(1) = m2(j);
+
+			complex<double> pt = a_conj * orin_pt;
+			int label = (i^j) & 0x03; // xor
+			//cout<<i<<","<<j<<","<<label<<endl;
+
+			sp_constellation(k).pt    = pt;
+			sp_constellation(k).label = label;
+			k++;
+		}
+	}
+
+}
+
 
 
 void ZfTwRelay::init_dem_region(vec &a, itpp::cvec &m1, itpp::cvec &m2) {
@@ -344,9 +367,11 @@ cvec ZfTwRelay::pnc_mmse_a(double N0) {
 	// (H^*H + N_0 I)^{-1}
 	int ncol = H.cols();
 	cmat herm_H = hermitian_transpose(H);
-	cmat Q = H * herm_H;
-	Q += N0 * diag(ones_c(ncol));
+	cmat P = herm_H * H;
+	P += N0 * diag(ones_c(ncol));
+	cmat invP = inv(P);	
 
+	cmat Q = N0 * invP;
 	vec lambda;
 	Array<cvec> eigvec;
 	bool res = ralgh_quot(Q, lambda, eigvec);
@@ -354,7 +379,8 @@ cvec ZfTwRelay::pnc_mmse_a(double N0) {
 		return false;
 
 	cvec a;
-	a = sqrt(2) * eigvec(0);
+	//a = sqrt(2) * eigvec(0);
+	a = eigvec(0);
 	return a;
 }
 
@@ -393,12 +419,12 @@ ivec ZfTwRelay::pnc_ml_demapping(cvec &a, Array<itpp::cvec> &mimo_out) {
 			complex<double> pt = sp_constellation(j).pt;
 			complex<double> diff = aYr - pt;
 			double calc_norm2 = diff.real() * diff.real() + diff.imag() * diff.imag();
-			norm2(sp_constellation(j).label) += exp(-calc_norm2);
+			norm2(sp_constellation(j).label) += calc_norm2;
 		}
 		
-		int max_pt = 0;
-		double max_norm2 = max(norm2, max_pt);
-		res_label(i) = max_pt;
+		int min_pt = 0;
+		double min_norm2 = min(norm2, min_pt);
+		res_label(i) = min_pt;
 	}
 
 	return res_label;

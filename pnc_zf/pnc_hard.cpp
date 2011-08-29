@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
 	int num_rx_ant = 2;
 
 	int block_num = 100;
-	int msg_len = 10000;
+	int msg_len = 1000;
 	int sym_len = msg_len/2;  // QPSK
 
 	double Es = 1;

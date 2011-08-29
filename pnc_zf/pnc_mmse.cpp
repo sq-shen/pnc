@@ -86,12 +86,12 @@ int main(int argc, char *argv[])
 	int num_user = 2;
 	int num_rx_ant = 2;
 
-	int block_num = 1;
-	int msg_len = 10;
+	int block_num = 100;
+	int msg_len = 1000;
 	int sym_len = msg_len/2;  // QPSK
 
 	//vec EsN0dB  = linspace(11,20,10);
-	vec EsN0dB  = linspace(15, 15, 1); //test
+	vec EsN0dB  = linspace(5, 15, 11); //test
 	
 
 	if(!is_fixed_H) {
@@ -155,12 +155,12 @@ int main(int argc, char *argv[])
 			Ry = relay.calc_Ry(N0(i));
 			a = relay.pnc_mmse_a(N0(i));
 			w_conj = relay.pnc_mmse_detector(a, Ry);
-			relay.init_sp_const(w_conj, qam_syms, qam_syms);
+			relay.init_mmse_sp_const(a, qam_syms, qam_syms);
 			
-			cout<<"Ry="<<Ry<<endl;
-			cout<<"a="<<a<<endl;
-			cout<<"w_conj="<<w_conj<<endl;
-			relay.show_sp_constellation();
+			//cout<<"Ry="<<Ry<<endl;
+			//cout<<"a="<<a<<endl;
+			//cout<<"w_conj="<<w_conj<<endl;
+			//relay.show_sp_constellation();
 		}
 
 		int tot_sym = 0, err = 0;
@@ -199,7 +199,7 @@ int main(int argc, char *argv[])
 				Ry = relay.calc_Ry(N0(i));
 				a = relay.pnc_mmse_a(N0(i));
 				w_conj = relay.pnc_mmse_detector(a, Ry);
-				relay.init_sp_const(w_conj, qam_syms, qam_syms);
+				relay.init_mmse_sp_const(a, qam_syms, qam_syms);
 			}
 			mimomac.set_N0(N0(i));
 			Array<cvec> mimo_output = mimomac.channel(mimo_input);
