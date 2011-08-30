@@ -178,8 +178,8 @@ int main(int argc, char *argv[])
 			//======================================
 			// PNC Demapping
 			//======================================
-			//ivec dem_sym = relay.nc_zf_demapping(mimo_output, qam);
-			ivec dem_sym = relay.nc_mmse_demapping(mimo_output, N0(i), qam);
+			ivec dem_sym = relay.nc_zf_demapping(mimo_output, qam);
+			//ivec dem_sym = relay.nc_mmse_demapping(mimo_output, N0(i), qam);
 			//ivec dem_sym = relay.nc_ml_demapping(mimo_output, qam);
 
 			// cout<<"bv_msg_xor="<<bv_msg_xor<<endl;

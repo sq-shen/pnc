@@ -380,7 +380,7 @@ cvec ZfTwRelay::pnc_mmse_a(double N0) {
 	}
 
 	cvec a;
-	a = sqrt(2) * eigvec(0);
+	a = 0.5 * eigvec(0);
 	//a = eigvec(0);
 	return a;
 }

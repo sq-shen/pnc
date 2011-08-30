@@ -65,8 +65,8 @@ int main(int argc, char *argv[])
 	a.set_size(2);
 	bool is_assigned_a = false;
 	if(argc>=4) {
-		a(0) = atoi(argv[2]);
-		a(1) = atoi(argv[3]);
+		a(0) = atof(argv[2]);
+		a(1) = atof(argv[3]);
 		is_assigned_a = true;
 	}
 
@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
 	int num_rx_ant = 2;
 
 	int block_num = 100;
-	int msg_len = 10000;
+	int msg_len = 1000;
 	int sym_len = msg_len/2;  // QPSK
 
 	//vec EsN0dB  = linspace(11,20,10);
