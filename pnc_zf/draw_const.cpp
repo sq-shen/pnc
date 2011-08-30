@@ -84,11 +84,36 @@ int main(int argc, char *argv[])
 	
 	H = mimomac.get_H();
 	relay.set_H(H);
-	Ry = relay.calc_Ry(N0);
-	a = relay.pnc_mmse_a(N0);
-	
-	w_conj = relay.pnc_mmse_detector(a, Ry);
-	//w_conj = ones_c(2);
+
+	/*********************************************************************************
+	 *
+	 *
+	 *********************************************************************************/
+	//------------------------------
+	// PNC-ZF
+	//------------------------------
+	vec a_zf = relay.calc_opt_lincoeff();
+	a = to_cvec(a_zf);
+	cout<<"a_zf="<<a<<endl;
+	cmat pinvH = relay.get_pinvH();
+	cout<<"pinvH * H = "<<pinvH * H<<endl;
+	cmat tmp = hermitian_transpose(pinvH) * conj(a);
+	w_conj = round_to_zero(conj(tmp));
+	cout<<"w_conj="<<w_conj<<endl;
+
+
+//	//------------------------------
+//	// PNC-MMSE
+//	//------------------------------
+//	Ry = relay.calc_Ry(N0);
+//	a = relay.pnc_mmse_a(N0);
+//	w_conj = relay.pnc_mmse_detector(a, Ry);
+//
+//	//------------------------------
+//	// Only H
+//	//------------------------------
+//	w_conj = ones_c(2);
+	/*************************************************************************************/
 	
 	relay.init_sp_const(w_conj, qam_syms, qam_syms);
 	relay.show_sp_constellation();
