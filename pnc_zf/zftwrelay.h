@@ -42,6 +42,9 @@ public:
 
 	// Get the pseudo-inverse of H
 	itpp::cmat get_pinvH();
+
+	// Get the linear mimo detector matrix
+	itpp::cmat get_G();
 		
 	// Initialize superimposed constellation
 	void init_sp_const(itpp::cvec &comb_coeff, itpp::cvec &m1, itpp::cvec &m2);
@@ -149,6 +152,10 @@ inline void ZfTwRelay::set_H(itpp::cmat &ch) {
 
 inline itpp::cmat ZfTwRelay::get_pinvH() {
 	return pinvH;
+}
+
+inline itpp::cmat ZfTwRelay::get_G() {
+	return G;
 }
 
 inline void ZfTwRelay::set_lincoeff(itpp::cvec &a) {

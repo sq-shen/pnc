@@ -45,7 +45,27 @@ double norm2_a_pinvH(vec a, cmat pinvH) {
 	return energy(res);
 }
 
+double theoretic_ser(vec &a, cmat &G, double snr) {
 
+	double a_min = min(a);
+	double a_max = max(a);
+
+	double aG2 = energy( hermitian_transpose(G)*conj(to_cvec(a)) );
+	double Qm = Qfunc( sqrt( pow(a_min, 2) / aG2 * snr ) );
+	double QM = Qfunc( sqrt( pow(2*a_max-a_min, 2) / aG2 * snr ) );
+
+	double Pa = pow(1-Qm, 2);
+	double Pb = (1-Qm-QM) * (1-Qm);
+	double Pc = pow(1-Qm-QM, 2);
+
+	double ser = 1.0/4.0 * (1-Pa) + 1.0/2.0 * (1-Pb) + 1.0/4.0 * (1-Pc);
+
+	return ser;
+}
+
+//
+// TODO: fixed a: G is not calculated yet ?
+//
 int main(int argc, char *argv[]) 
 {
 	/*
@@ -158,6 +178,7 @@ int main(int argc, char *argv[])
 	// PNC Relay
 	// Demapping region (x1 + x2)
 	/////////////////////////////////////////////////
+	cmat G;
 	ZfTwRelay relay;
 	if(is_fixed_H && demap_type==0) {
 		H = mimomac.get_H();
@@ -173,7 +194,10 @@ int main(int argc, char *argv[])
 	/////////////////////////////////////////////////
 	// Simulation
 	/////////////////////////////////////////////////
-	log<<"#EsN0dB       #err         SER"<<endl;
+	if(is_fixed_H)
+		log<<"#EsN0dB       #err         SER		a1		a2		theoretic SER"<<endl;
+	else
+		log<<"#EsN0dB       #err         SER"<<endl;
 	for(int i=0; i<EsN0dB.size(); i++) {
 		
 		if(is_fixed_H && demap_type==1) {
@@ -217,8 +241,9 @@ int main(int argc, char *argv[])
 				mimomac.genH();
 				H = mimomac.get_H();
 				relay.set_H(H);
-				if(!is_assigned_a)
+				if(!is_assigned_a) {
 					a = relay.calc_opt_lincoeff(demap_type, N0(i));
+				}
 				relay.init_dem_region(a, syms, syms);
 			}
 			mimomac.set_N0(N0(i));
@@ -255,7 +280,13 @@ int main(int argc, char *argv[])
 		printf("\n");
 
 		// log
-		sprintf(buf, "  %4.1f      %6i    %1.3e", EsN0dB(i), err, ((double)err)/tot_sym);
+		if(is_fixed_H) {
+			G = relay.get_G();
+			sprintf(buf, "  %4.1f      %6i    %1.3e    %3.3f   %3.3f   %1.3e",
+					EsN0dB(i), err, ((double)err)/tot_sym, a(0), a(1), theoretic_ser(a, G, EsN0(i)));
+		} else {
+			sprintf(buf, "  %4.1f      %6i    %1.3e", EsN0dB(i), err, ((double)err)/tot_sym);
+		}
 		log<<buf<<endl;
 	}
 
