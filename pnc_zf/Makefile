@@ -49,9 +49,6 @@ DRAWCONST_OBJS := draw_const.o
 GENCH_PROG := gen_ch
 GENCH_OBJS := gen_ch.o 
 
-SEARCHA_PROG := search_a
-SEARCHA_OBJS := search_a.o
-
 PNCHARD_PROG := pnc_hard
 PNCHARD_OBJS := pnc_hard.o
 
@@ -62,7 +59,7 @@ COMM_OBJS += mimomac.o
 COMM_OBJS += zftwrelay.o
 
 
-all: $(PROGRAM) $(PNCML_PROG) $(PNCMMSE_PROG) $(GENCH_PROG) $(SEARCHA_PROG) $(PNCHARD_PROG) $(TESTEIGEN_PROG) $(DRAWCONST_PROG)
+all: $(PROGRAM) $(PNCML_PROG) $(PNCMMSE_PROG) $(GENCH_PROG) $(PNCHARD_PROG) $(TESTEIGEN_PROG) $(DRAWCONST_PROG)
 
 $(BIN_DIR):
 	@[ -d $@ ] || mkdir $@ 
@@ -108,14 +105,6 @@ $(GENCH_PROG): $(BIN_DIR) $(BIN_DIR)/$(GENCH_PROG)
 $(BIN_DIR)/$(GENCH_PROG): $(addprefix $(BIN_DIR)/, $(GENCH_OBJS))
 	$(CXX) $(LIBS) -o $@ $^
 	
-#
-# search_a
-#
-$(SEARCHA_PROG): $(BIN_DIR) $(BIN_DIR)/$(SEARCHA_PROG)
-
-$(BIN_DIR)/$(SEARCHA_PROG): $(addprefix $(BIN_DIR)/, $(SEARCHA_OBJS))
-	$(CXX) $(LIBS) -o $@ $^
-
 
 #
 # pnc_hard
@@ -144,7 +133,7 @@ $(BIN_DIR)/%.o: %.cpp
 # 
 ############################################################
 
-.PHONY: all clean $(PROGRAM) $(GENCH_PROG) $(SEARCHA_PROG) $(PNCHARD_PROG) $(TESTEIGEN_PROG) $(PNCML_PROG) $(PNCMMSE_PROG) $(DRAWCONST_PROG)
+.PHONY: all clean $(PROGRAM) $(GENCH_PROG) $(PNCHARD_PROG) $(TESTEIGEN_PROG) $(PNCML_PROG) $(PNCMMSE_PROG) $(DRAWCONST_PROG)
 
 	
 clean:

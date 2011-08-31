@@ -46,17 +46,32 @@ double norm2_a_pinvH(vec a, cmat pinvH) {
 
 int main(int argc, char *argv[])
 {
+	/*
+	 *	Demapping type
+	 *		0 => ML
+	 *		1 => ZF
+	 *		2 => MMSE
+	 */
+	int demap_type = 0;
+	if(argc>=2) {
+		if (strcmp(argv[1], "ml")==0)
+			demap_type = 0;
+		else if (strcmp(argv[1], "zf")==0)
+			demap_type = 1;
+		else if (strcmp(argv[1], "mmse")==0)
+			demap_type = 2;
+	}
+	
 	cmat read_H;
 	bool is_fixed_H = false;
-	if(argc>=2) {
+	if(argc>=3) {
 		it_file ff;
-		ff.open(argv[1]);
+		ff.open(argv[2]);
 		ff>>Name("H")>>read_H;
 		ff.close();
 		is_fixed_H = true;
 		cout<<"Read H: "<<read_H<<endl;
-		
-	} 
+	}
 
 	RNG_randomize();
 	Real_Timer tt;
@@ -74,16 +89,16 @@ int main(int argc, char *argv[])
 	int num_user = 2;
 	int num_rx_ant = 2;
 
-	int block_num = 100;
-	int msg_len = 1000;
+	int block_num = 1000;
+	int msg_len = 10000;
 	int sym_len = msg_len/2;  // QPSK
 
 	double Es = 1;
 	
-	vec EsN0dB  = linspace(5,15,11);
+	vec EsN0dB  = linspace(0,20,21);
 	
 	if(!is_fixed_H) {
-		block_num = 1000;
+		block_num = 10000;
 		msg_len = 1000;	
 		sym_len = msg_len/2;  // QPSK
 		EsN0dB  = linspace(0,35,36);	// fading
@@ -178,7 +193,21 @@ int main(int argc, char *argv[])
 			//======================================
 			// PNC Demapping
 			//======================================
-			ivec dem_sym = relay.nc_zf_demapping(mimo_output, qam);
+			ivec dem_sym;
+			switch(demap_type) {
+			case 0:
+				dem_sym = relay.nc_ml_demapping(mimo_output, qam);
+				break;
+				
+			case 1:
+				dem_sym = relay.nc_zf_demapping(mimo_output, qam);
+				break;
+				
+			case 2:
+				dem_sym = relay.nc_mmse_demapping(mimo_output, N0(i), qam);
+				break;
+			}
+			//ivec dem_sym = relay.nc_zf_demapping(mimo_output, qam);
 			//ivec dem_sym = relay.nc_mmse_demapping(mimo_output, N0(i), qam);
 			//ivec dem_sym = relay.nc_ml_demapping(mimo_output, qam);
 

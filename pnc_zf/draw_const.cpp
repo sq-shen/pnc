@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
 	//------------------------------
 	// PNC-ZF
 	//------------------------------
-	vec a_zf = relay.calc_opt_lincoeff();
+	vec a_zf = relay.calc_opt_lincoeff(0);
 	a = to_cvec(a_zf);
 	cout<<"a_zf="<<a<<endl;
 	cmat pinvH = relay.get_pinvH();

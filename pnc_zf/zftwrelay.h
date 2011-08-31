@@ -60,13 +60,16 @@ public:
 	
 	// Calculate pseudo-inverse of H
 	void cal_pinvH();
+	
+	// Calculate pseudo-inverse of H
+	void cal_pinvH(itpp::cmat &pH);
 
 	 // Set the linear combination factor
 	void set_lincoeff(itpp::vec &a);
 	void set_lincoeff(itpp::cvec &a);
 	
 	// Calculate optimized a
-	itpp::vec calc_opt_lincoeff();
+	itpp::vec calc_opt_lincoeff(int type, double N0=-1);
 
 	// Initialize demodulation region
 	void init_dem_region(itpp::vec &a, itpp::cvec &m1, itpp::cvec &m2);
@@ -75,7 +78,7 @@ public:
 	int get_region_idx(std::complex<double> symbol);
 
 	//
-	itpp::ivec pnc_demapping(itpp::Array<itpp::cvec> &mimo_out);
+	itpp::ivec pnc_demapping(int type, itpp::Array<itpp::cvec> &mimo_out, double N0);
 	
 	/*
 	 *	PNC-MMSE functions
@@ -122,6 +125,8 @@ protected:
 	
 	// Pseudo-inverse of H
 	itpp::cmat pinvH;
+	
+	itpp::cmat G;
 
 	// Linear combination factor of the two transmitted signals
 	itpp::cvec lincoeff;

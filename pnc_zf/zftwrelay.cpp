@@ -31,6 +31,14 @@ void ZfTwRelay::cal_pinvH() {
 	pinvH = inv_herm_H_H * herm_H;
 }
 
+void ZfTwRelay::cal_pinvH(cmat &pH) {
+	// Get pseudo-inverse of H
+	cmat herm_H = hermitian_transpose(H);
+	cmat herm_H_H = herm_H * H;
+	cmat inv_herm_H_H = inv(herm_H_H);
+	pH = inv_herm_H_H * herm_H;
+}
+
 cmat ZfTwRelay::cal_mmseG(double N0) {
 
 	cvec cv_ones = ones_c(2);
@@ -38,24 +46,28 @@ cmat ZfTwRelay::cal_mmseG(double N0) {
 	cmat herm_H_H = herm_H * H;
 	cmat N0_herm_H_H = herm_H_H + N0*diag(cv_ones);
 	cmat inv_N0_herm_H_H = inv(N0_herm_H_H);
-	cmat G = inv_N0_herm_H_H * herm_H;
-
-	return G;
-
+	cmat mmseG = inv_N0_herm_H_H * herm_H;
+	return mmseG;
 }
 
 
-vec ZfTwRelay::calc_opt_lincoeff() {
+vec ZfTwRelay::calc_opt_lincoeff(int type, double N0) {
 	
-	// Get (H*H)^-1
-	cmat herm_H = hermitian_transpose(H);
-	cmat herm_H_H = herm_H * H;
-	cmat inv_herm_H_H = inv(herm_H_H);
+	// Get G
+	//	ZF:   G = (H^*H)^-1
+	//	MMSE: G = (H^*H+ N0I)^-1
+	if(type==0) {
+		cal_pinvH(G);
+	} else {
+		G = cal_mmseG(N0);
+	}
+	
+	cmat G2 = G * hermitian_transpose(G);
 	
 	// variables
-	double p = inv_herm_H_H(0, 0).real();
-	double r = inv_herm_H_H(1, 1).real();
-	double s = 2 * inv_herm_H_H(0, 1).real();
+	double p = G2(0, 0).real();
+	double r = G2(1, 1).real();
+	double s = 2 * G2(0, 1).real();
 	
 	double min_val, min_b1, min_b2;
 	double val, tmpb, b1, b2;
@@ -435,30 +447,18 @@ ivec ZfTwRelay::pnc_ml_demapping(cvec &a, Array<itpp::cvec> &mimo_out) {
 	return res_label;
 }
 
-ivec ZfTwRelay::pnc_demapping(Array<cvec> &mimo_output) {
+ivec ZfTwRelay::pnc_demapping(int type, Array<cvec> &mimo_output, double N0) {
 
 	ivec res_label;
 	res_label.set_size(mimo_output.size());
 	
-	// Get pseudo-inverse of H
-	// cmat herm_H = hermitian_transpose(H);
-	// cmat herm_H_H = herm_H * H;
-	// cmat inv_herm_H_H = inv(herm_H_H);
-	// cmat pinvH = inv_herm_H_H * herm_H;
-
-	// cout<<"H="<<H<<endl;
-	// cout<<"pinvH="<<pinvH<<endl;
-	// cout<<"pinvH_H"<<pinvH * H<<endl;
-	
-	// 
 	for(int i=0; i<mimo_output.size(); i++) {
 		cvec in = mimo_output(i);
-		complex<double> transformed_symbol = lincoeff * (pinvH * in);
+		complex<double> transformed_symbol = lincoeff * (G * in);
 		
 		int idx = get_region_idx(transformed_symbol);
 		res_label(i) = dem_regions(idx).label;
 	}
-	
 	
 	return res_label;
 }

@@ -48,12 +48,28 @@ double norm2_a_pinvH(vec a, cmat pinvH) {
 
 int main(int argc, char *argv[]) 
 {
+	/*
+	 *	Demapping type
+	 *		0 => ZF
+	 *		1 => MMSE
+	 */
+	int demap_type = 0;
+	if(argc>=2) {
+		if (strcmp(argv[1], "zf")==0) {
+			demap_type = 0;
+			cout<<"PNC-ZF"<<endl;
+		} else if (strcmp(argv[1], "mmse")==0) {
+			demap_type = 1;
+			cout<<"PNC-MMSEs"<<endl;
+		}
+	}
+
 	// Fixed channel matrix from file
 	cmat read_H;
 	bool is_fixed_H = false;
-	if(argc>=2) {
+	if(argc>=3) {
 		it_file ff;
-		ff.open(argv[1]);
+		ff.open(argv[2]);
 		ff>>Name("H")>>read_H;
 		ff.close();	
 		cout<<"Read H: "<<read_H<<endl;
@@ -64,9 +80,9 @@ int main(int argc, char *argv[])
 	vec a;
 	a.set_size(2);
 	bool is_assigned_a = false;
-	if(argc>=4) {
-		a(0) = atof(argv[2]);
-		a(1) = atof(argv[3]);
+	if(argc>=5) {
+		a(0) = atof(argv[3]);
+		a(1) = atof(argv[4]);
 		is_assigned_a = true;
 	}
 
@@ -77,7 +93,7 @@ int main(int argc, char *argv[])
 
 	// log file
 	ofstream log;
-	log.open("log.txt", ios::app|ios::out);
+	log.open("log_pnc.txt", ios::app|ios::out);
 	log<<"==================================================================================================="<<endl;
 
 	//////////////////////////////////////////////////
@@ -86,13 +102,12 @@ int main(int argc, char *argv[])
 	int num_user = 2;
 	int num_rx_ant = 2;
 
-	int block_num = 100;
-	int msg_len = 1000;
+	int block_num = 1000;
+	int msg_len = 10000;
 	int sym_len = msg_len/2;  // QPSK
 
-	//vec EsN0dB  = linspace(11,20,10);
-	vec EsN0dB  = linspace(5,15,11); //test
-	
+	vec EsN0dB  = linspace(0,20,21);
+
 
 	if(!is_fixed_H) {
 		block_num = 10000;
@@ -130,42 +145,47 @@ int main(int argc, char *argv[])
 	/////////////////////////////////////////////////
 	// Channel initialization
 	/////////////////////////////////////////////////
+	cmat H;
 	MimoMac mimomac(num_user, num_rx_ant);
-	if(!is_fixed_H)
-		mimomac.genH();
-	else
+	if(is_fixed_H) {
 		mimomac.set_H(read_H);
-	cmat H = mimomac.get_H();
-	cout<<"H="<<H<<endl;
-	log<<"H=\n"<<H<<endl;
+		H = mimomac.get_H();
+		cout<<"Fixed H="<<H<<endl;
+		log<<"Fixed H=\n"<<H<<endl;
+	}
 
 	/////////////////////////////////////////////////
 	// PNC Relay
 	// Demapping region (x1 + x2)
 	/////////////////////////////////////////////////
 	ZfTwRelay relay;
-	relay.set_H(H);
-	if(!is_assigned_a) {
-		a = relay.calc_opt_lincoeff();
+	if(is_fixed_H && demap_type==0) {
+		H = mimomac.get_H();
+		relay.set_H(H);
+		if(!is_assigned_a) {
+			a = relay.calc_opt_lincoeff(demap_type);
+			cout<<"a="<<a<<endl;
+		}
+		relay.init_dem_region(a, syms, syms);
 	}
-	relay.init_dem_region(a, syms, syms);
-	cmat pinvH = relay.get_pinvH();
-//	relay.show_sp_constellation();
-//	relay.show_dem_regions();
 
-	double norm2 = norm2_a_pinvH(a, pinvH);
-	cout<<"a="<<a<<endl;
-	log<<"a="<<a<<endl;
-	log<<"pinvH=\n"<<pinvH<<endl;
-	log<<"||a pinvH||^2 = "<<norm2<<endl;
-
-
+	
 	/////////////////////////////////////////////////
 	// Simulation
 	/////////////////////////////////////////////////
 	log<<"#EsN0dB       #err         SER"<<endl;
 	for(int i=0; i<EsN0dB.size(); i++) {
-
+		
+		if(is_fixed_H && demap_type==1) {
+			H = mimomac.get_H();
+			relay.set_H(H);
+			if(!is_assigned_a) {
+				a = relay.calc_opt_lincoeff(demap_type, N0(i));
+				cout<<"a="<<a<<endl;
+			}
+			relay.init_dem_region(a, syms, syms);
+		}
+		
 		int tot_sym = 0, err = 0;
 		for(int bk=1; bk<=block_num; bk++) {
 
@@ -197,7 +217,8 @@ int main(int argc, char *argv[])
 				mimomac.genH();
 				H = mimomac.get_H();
 				relay.set_H(H);
-				a = relay.calc_opt_lincoeff();
+				if(!is_assigned_a)
+					a = relay.calc_opt_lincoeff(demap_type, N0(i));
 				relay.init_dem_region(a, syms, syms);
 			}
 			mimomac.set_N0(N0(i));
@@ -207,7 +228,7 @@ int main(int argc, char *argv[])
 			//======================================
 			// PNC Demapping
 			//======================================
-			ivec dem_sym = relay.pnc_demapping(mimo_output);
+			ivec dem_sym = relay.pnc_demapping(demap_type, mimo_output, N0(i));
 
 			// cout<<"bv_msg_xor="<<bv_msg_xor<<endl;
 			// cout<<"dem_sym="<<dem_sym<<endl;
