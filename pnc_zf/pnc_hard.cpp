@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
 	vec EsN0dB  = linspace(0,20,21);
 	
 	if(!is_fixed_H) {
-		block_num = 10000;
+		block_num = 200000;
 		msg_len = 1000;	
 		sym_len = msg_len/2;  // QPSK
 		EsN0dB  = linspace(0,35,36);	// fading
