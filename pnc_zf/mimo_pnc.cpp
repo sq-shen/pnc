@@ -108,10 +108,10 @@ int main(int argc, char *argv[])
 	vec EsN0dB  = linspace(0,20,21);
 	
 	if(!is_fixed_H) {
-		block_num = 1000;
+		block_num = 200000;
 		msg_len = 1000;	
 		sym_len = msg_len/mod.bits_per_symbol(); 
-		EsN0dB  = linspace(30,35,6);	// fading
+		EsN0dB  = linspace(0,35,36);	// fading
 	}
 
 	vec EsN0    = inv_dB(EsN0dB);

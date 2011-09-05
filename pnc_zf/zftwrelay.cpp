@@ -598,8 +598,8 @@ void ZfTwRelay::calc_mimopnc_G(int type, double N0) {
 	}
 	
 	cmat hermG = hermitian_transpose(mimopnc_G);
-	cmat hermG_G = hermG * mimopnc_G;
-	//cmat hermG_G = mimopnc_G * hermG;
+	//cmat hermG_G = hermG * mimopnc_G;
+	cmat hermG_G = mimopnc_G * hermG;
 	equiv_noise(0) = hermG_G(0,0).real() * N0;
 	equiv_noise(1) = hermG_G(1,1).real() * N0;
 	//cout<<hermG_G(0,0)<<", "<<hermG_G(1,1)<<endl;
