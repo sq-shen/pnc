@@ -18,9 +18,19 @@ ZfTwRelay::ZfTwRelay() {
 	dem_regions.set_size(9);
 	xbndry.set_size(2);
 	ybndry.set_size(2);
+	
+	equiv_noise.set_size(2);
 }
 
 ZfTwRelay::~ZfTwRelay() {
+}
+
+void ZfTwRelay::set_H(itpp::cmat &ch) {
+	H = ch;
+	cal_pinvH();
+
+	// MIMO-PNC
+	calc_mimopnc_H();
 }
 
 void ZfTwRelay::cal_pinvH() {
@@ -560,5 +570,115 @@ void ZfTwRelay::show_dem_regions() {
 	}
 }
 
+/*
+ *	MIMO-PNC
+ */
+void ZfTwRelay::calc_mimopnc_H() {
+	cmat invD = "0.5 0.5; 0.5 -0.5";
+	mimopnc_H = H * invD;
+}
+
+//
+//
+//
+void ZfTwRelay::calc_mimopnc_G(int type, double N0) {
+	
+	cmat herm_H = hermitian_transpose(mimopnc_H);
+	cmat herm_H_H = herm_H * mimopnc_H;
+	
+	if(type==0) {
+		// Get pseudo-inverse of H	
+		cmat inv_herm_H_H = inv(herm_H_H);
+		mimopnc_G = inv_herm_H_H * herm_H;
+	} else {
+		cvec cv_ones = ones_c(2);
+		cmat N0_herm_H_H = herm_H_H + N0*diag(cv_ones);
+		cmat inv_N0_herm_H_H = inv(N0_herm_H_H);
+		mimopnc_G = inv_N0_herm_H_H * herm_H;	
+	}
+	
+	cmat hermG = hermitian_transpose(mimopnc_G);
+	cmat hermG_G = hermG * mimopnc_G;
+	//cmat hermG_G = mimopnc_G * hermG;
+	equiv_noise(0) = hermG_G(0,0).real() * N0;
+	equiv_noise(1) = hermG_G(1,1).real() * N0;
+	//cout<<hermG_G(0,0)<<", "<<hermG_G(1,1)<<endl;
+	//cout<<"equiv_noise="<<equiv_noise<<endl;
+
+}
 
 
+ivec ZfTwRelay::mimo_pnc_demapping(itpp::Array<itpp::cvec> &mimo_out) {
+	
+	ivec res_label;
+	res_label.set_size(mimo_out.size()); 
+	
+	for(int i=0; i<mimo_out.size(); i++) {
+		cvec r  = mimo_out(i);
+		cvec Gr = mimopnc_G * r;
+		complex<double> y1 = Gr(0);
+		complex<double> y2 = Gr(1);
+		
+		double n1 = equiv_noise(0)/2;
+		double n2 = equiv_noise(1)/2;
+		
+		ivec lbl = "0 0";
+		//int lbl = 0 ;
+		
+		double numerator, denominator, LR;
+		
+		// Real part
+		numerator   = ( exp( -pow(y1.real()+2, 2) / n1) + exp( -pow((y1.real()-2), 2) / n1 ) )* 
+					  exp( -pow(y2.real(), 2) / n2 );
+		denominator = exp(-pow(y1.real(), 2) / n1) *
+					  ( exp(-pow(y2.real()+2, 2) / n2) + exp(-pow(y2.real()-2, 2) / n2) );
+		LR = numerator / denominator;
+		lbl(0) = (LR>=1 ? 0 : 1);
+		
+		// Imaginary part 
+		numerator   = ( exp( -pow(y1.imag()+2, 2) / n1) + exp( -pow((y1.imag()-2), 2) / n1 ) ) * 
+					  exp( -pow(y2.imag(), 2) / n2 );
+		denominator = exp(-pow(y1.imag(), 2) / n1) *
+					  ( exp(-pow(y2.imag()+2, 2) / n2) + exp(-pow(y2.imag()-2, 2) / n2) );
+		LR = numerator / denominator;
+		lbl(1) = (LR>=1 ? 0 : 1);
+		
+		res_label(i) = 2*lbl(1) + lbl(0);
+		//res_label(i) = lbl;
+	}
+
+	return res_label;
+}
+
+// ivec ZfTwRelay::mimo_pnc_demapping(itpp::Array<itpp::cvec> &mimo_out) {
+	
+	// ivec res_label;
+	// res_label.set_size(mimo_out.size());
+	// double var1 = equiv_noise(0)/2;
+	// double var2 = equiv_noise(1)/2;
+	
+	// for(int i=0; i<mimo_out.size(); i++) {
+		// cvec r  = mimo_out(i);
+		// cvec Gr = mimopnc_G * r;
+		// complex<double> y1 = Gr(0);
+		// complex<double> y2 = Gr(1);
+		
+		// ivec lbl = "0 0";
+		// //int lbl = 0 ;
+		
+		// // Real part
+		// double L = exp(2/var2-2/var1) * cosh(2*y1.real()/var1) / cosh(2*y2.real()/var2);
+		// lbl(0) = (L>=1 ? 0 : 1);
+		// lbl = (L>=1 ? 0 : 1);
+		
+		// // Imaginary part 
+		// L = exp(2/var2-2/var1) * cosh(2*y1.imag()/var1) / cosh(2*y2.imag()/var2);
+		// lbl(1) = (L>=1 ? 0 : 1);
+		
+		
+		// res_label(i) = 2*lbl(1) + lbl(0);
+		// //res_label(i) = lbl;
+	// }
+
+	// return res_label;
+// }

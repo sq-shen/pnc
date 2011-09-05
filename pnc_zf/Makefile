@@ -43,6 +43,9 @@ PNCML_OBJS := pnc_ml.o
 PNCMMSE_PROG := pnc_mmse
 PNCMMSE_OBJS := pnc_mmse.o
 
+MIMOPNC_PROG := mimo_pnc
+MIMOPNC_OBJS := mimo_pnc.o
+
 DRAWCONST_PROG := draw_const
 DRAWCONST_OBJS := draw_const.o
 
@@ -59,7 +62,7 @@ COMM_OBJS += mimomac.o
 COMM_OBJS += zftwrelay.o
 
 
-all: $(PROGRAM) $(PNCML_PROG) $(PNCMMSE_PROG) $(GENCH_PROG) $(PNCHARD_PROG) $(TESTEIGEN_PROG) $(DRAWCONST_PROG)
+all: $(PROGRAM) $(PNCML_PROG) $(PNCMMSE_PROG) $(MIMOPNC_PROG) $(GENCH_PROG) $(PNCHARD_PROG) $(TESTEIGEN_PROG) $(DRAWCONST_PROG)
 
 $(BIN_DIR):
 	@[ -d $@ ] || mkdir $@ 
@@ -87,6 +90,16 @@ $(PNCMMSE_PROG): $(BIN_DIR) $(BIN_DIR)/$(PNCMMSE_PROG)
 
 $(BIN_DIR)/$(PNCMMSE_PROG): $(addprefix $(BIN_DIR)/, $(PNCMMSE_OBJS)) $(addprefix $(BIN_DIR)/, $(COMM_OBJS))
 	$(CXX) $(LIBS) -o $@ $^
+	
+	
+#
+# mimo_pnc
+#
+$(MIMOPNC_PROG): $(BIN_DIR) $(BIN_DIR)/$(MIMOPNC_PROG)
+
+$(BIN_DIR)/$(MIMOPNC_PROG): $(addprefix $(BIN_DIR)/, $(MIMOPNC_OBJS)) $(addprefix $(BIN_DIR)/, $(COMM_OBJS))
+	$(CXX) $(LIBS) -o $@ $^
+	
 	
 #
 # draw_const
@@ -133,7 +146,7 @@ $(BIN_DIR)/%.o: %.cpp
 # 
 ############################################################
 
-.PHONY: all clean $(PROGRAM) $(GENCH_PROG) $(PNCHARD_PROG) $(TESTEIGEN_PROG) $(PNCML_PROG) $(PNCMMSE_PROG) $(DRAWCONST_PROG)
+.PHONY: all clean $(PROGRAM) $(GENCH_PROG) $(PNCHARD_PROG) $(TESTEIGEN_PROG) $(PNCML_PROG) $(PNCMMSE_PROG) $(DRAWCONST_PROG) $(MIMOPNC_PROG)
 
 	
 clean:

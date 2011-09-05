@@ -101,7 +101,24 @@ public:
 	//
 	itpp::ivec pnc_ml_demapping(itpp::cvec &a, itpp::Array<itpp::cvec> &mimo_out);
 
+	/*
+	 *	MIMO-PNC
+	 *  S. Zhang and S. C. Liew, ¡§Physical layer network coding with multiple
+     *  antennas,¡¨ in Proc. IEEE WCNC 2010.
+	 */
+	void calc_mimopnc_H();
 	
+	void calc_mimopnc_G(int type, double N0);
+	
+	itpp::cmat get_mimopnc_H();
+
+	itpp::cmat get_mimopnc_G();
+	
+	itpp::ivec mimo_pnc_demapping(itpp::Array<itpp::cvec> &mimo_out);
+	
+	
+	 
+		
 	/*
 	 *	NC functions
 	 */
@@ -142,13 +159,15 @@ protected:
 
 	itpp::vec xbndry;
 	itpp::vec ybndry;
+	
+	/*
+	 *	MIMO-PNC
+	 */
+	itpp::cmat mimopnc_H;
+	itpp::cmat mimopnc_G;
+	itpp::vec equiv_noise;
 
 };
-
-inline void ZfTwRelay::set_H(itpp::cmat &ch) {
-	H = ch;
-	cal_pinvH();
-}
 
 inline itpp::cmat ZfTwRelay::get_pinvH() {
 	return pinvH;
@@ -171,6 +190,16 @@ inline void ZfTwRelay::set_lincoeff(itpp::vec &a) {
 
 inline itpp::Array<sp_pt> ZfTwRelay::get_sp_constellation() {
 	return sp_constellation;
+}
+
+
+
+inline itpp::cmat ZfTwRelay::get_mimopnc_H() {
+	return mimopnc_H;
+}
+
+inline itpp::cmat ZfTwRelay::get_mimopnc_G() {
+	return mimopnc_G;
 }
 
 
