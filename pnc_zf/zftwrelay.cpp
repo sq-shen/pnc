@@ -650,6 +650,10 @@ ivec ZfTwRelay::mimo_pnc_demapping(itpp::Array<itpp::cvec> &mimo_out) {
 						  ( exp(-pow(y2(k)-upbd, 2) / (2*n2)) + exp(-pow(y2(k)-lobd, 2) / (2*n2)) );
 			
 			LR = numerator / denominator;
+			
+			
+			//double LR = exp(2/n2-2/n1) * cosh(2*y1(k)/n1) / cosh(2*y2(k)/n2);
+			
 			lbl(k) = (LR>=1 ? 0 : 1);
 			
 			res_label(i) += lbl(k) << k;

@@ -5,7 +5,7 @@ INCLUDES := -I../../comm
 LDFLAGS :=
 LIBS := -lm -litpp -lfftw3 -llapack -lblas
 
-DEBUG = 1
+DEBUG = 0
 
 ifeq ($(DEBUG),1)
 	CFLAGS  += -g -Wall -DNDEBUG -pipe
