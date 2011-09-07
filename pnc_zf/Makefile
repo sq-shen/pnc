@@ -5,7 +5,7 @@ INCLUDES := -I../../comm
 LDFLAGS :=
 LIBS := -lm -litpp -lfftw3 -llapack -lblas
 
-DEBUG = 0
+DEBUG = 1
 
 ifeq ($(DEBUG),1)
 	CFLAGS  += -g -Wall -DNDEBUG -pipe
@@ -55,6 +55,9 @@ GENCH_OBJS := gen_ch.o
 PNCHARD_PROG := pnc_hard
 PNCHARD_OBJS := pnc_hard.o
 
+MRCPNC_PROG := mrc_pnc
+MRCPNC_OBJS := mrc_pnc.o
+
 TESTEIGEN_PROG := test_eigen
 TESTEIGEN_OBJS := test_eigen.o mimomac.o zftwrelay.o
 
@@ -62,7 +65,8 @@ COMM_OBJS += mimomac.o
 COMM_OBJS += zftwrelay.o
 
 
-all: $(PROGRAM) $(PNCML_PROG) $(PNCMMSE_PROG) $(MIMOPNC_PROG) $(GENCH_PROG) $(PNCHARD_PROG) $(TESTEIGEN_PROG) $(DRAWCONST_PROG)
+#all: $(PROGRAM) $(PNCML_PROG) $(PNCMMSE_PROG) $(MIMOPNC_PROG) $(GENCH_PROG) $(PNCHARD_PROG) $(TESTEIGEN_PROG) $(DRAWCONST_PROG) $(MRCPNC_PROG)
+all: $(MRCPNC_PROG)
 
 $(BIN_DIR):
 	@[ -d $@ ] || mkdir $@ 
@@ -100,6 +104,14 @@ $(MIMOPNC_PROG): $(BIN_DIR) $(BIN_DIR)/$(MIMOPNC_PROG)
 $(BIN_DIR)/$(MIMOPNC_PROG): $(addprefix $(BIN_DIR)/, $(MIMOPNC_OBJS)) $(addprefix $(BIN_DIR)/, $(COMM_OBJS))
 	$(CXX) $(LIBS) -o $@ $^
 	
+
+#
+# mrc_pnc
+#
+$(MRCPNC_PROG): $(BIN_DIR) $(BIN_DIR)/$(MRCPNC_PROG)
+
+$(BIN_DIR)/$(MRCPNC_PROG): $(addprefix $(BIN_DIR)/, $(MRCPNC_OBJS)) $(addprefix $(BIN_DIR)/, $(COMM_OBJS))
+	$(CXX) $(LIBS) -o $@ $^
 	
 #
 # draw_const
@@ -146,8 +158,10 @@ $(BIN_DIR)/%.o: %.cpp
 # 
 ############################################################
 
-.PHONY: all clean $(PROGRAM) $(GENCH_PROG) $(PNCHARD_PROG) $(TESTEIGEN_PROG) $(PNCML_PROG) $(PNCMMSE_PROG) $(DRAWCONST_PROG) $(MIMOPNC_PROG)
+.PHONY: all clean $(PROGRAM) $(GENCH_PROG) $(PNCHARD_PROG) $(TESTEIGEN_PROG) $(PNCML_PROG) $(PNCMMSE_PROG) $(DRAWCONST_PROG) $(MIMOPNC_PROG) $(MRCPNC_PROG)
 
 	
+#clean:
+#	@rm -rf dbglog1.txt dbglog2.txt $(BIN_DIR)
 clean:
-	@rm -rf dbglog1.txt dbglog2.txt $(BIN_DIR)
+	@rm -rf dbglog1.txt dbglog2.txt $(BIN_DIR)/*.o mrc_pnc

@@ -119,6 +119,12 @@ public:
 	void set_mapper(itpp::Modulator<std::complex<double> > *mod);
 	
 	
+	/*
+	 *	MRC-PNC
+	 */
+	itpp::ivec bpsk_mrc_pnc_demapping(itpp::Array<itpp::cvec> &mimo_out);
+	
+	
 	 
 		
 	/*

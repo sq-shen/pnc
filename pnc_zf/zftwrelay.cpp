@@ -476,6 +476,32 @@ ivec ZfTwRelay::pnc_demapping(int type, Array<cvec> &mimo_output, double N0) {
 }
 
 
+ivec ZfTwRelay::bpsk_mrc_pnc_demapping(itpp::Array<itpp::cvec> &mimo_output) {
+	
+	ivec res_label;
+	res_label.set_size(mimo_output.size());
+	
+	cvec h1 = H.get_col(0);
+	cvec h2 = H.get_col(1);
+	
+	for(int i=0; i<mimo_output.size(); i++) {
+		
+		cvec in = mimo_output(i);
+				
+		complex<double> Ryh1 = conj(in) * h1;
+		complex<double> Ryh2 = conj(in) * h2;
+		complex<double> Rh1h2 = conj(h1) * h2;
+		
+		double lhs = abs((Ryh1 + Ryh2).real());
+		double rhs = abs((Ryh1 - Ryh2).real()) + 2 * Rh1h2.real();
+		
+		res_label(i) = (lhs>=rhs ? 0 : 1); 
+	}
+
+	return res_label;
+}
+
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //
