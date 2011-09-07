@@ -116,6 +116,8 @@ public:
 	
 	itpp::ivec mimo_pnc_demapping(itpp::Array<itpp::cvec> &mimo_out);
 	
+	void set_mapper(itpp::Modulator<std::complex<double> > *mod);
+	
 	
 	 
 		
@@ -166,6 +168,7 @@ protected:
 	itpp::cmat mimopnc_H;
 	itpp::cmat mimopnc_G;
 	itpp::vec equiv_noise;
+	itpp::Modulator<std::complex<double> > *mapper;
 
 };
 
@@ -200,6 +203,10 @@ inline itpp::cmat ZfTwRelay::get_mimopnc_H() {
 
 inline itpp::cmat ZfTwRelay::get_mimopnc_G() {
 	return mimopnc_G;
+}
+
+inline void ZfTwRelay::set_mapper(itpp::Modulator<std::complex<double> > *mod) {
+	mapper = mod;
 }
 
 

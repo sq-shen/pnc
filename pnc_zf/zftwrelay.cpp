@@ -20,6 +20,8 @@ ZfTwRelay::ZfTwRelay() {
 	ybndry.set_size(2);
 	
 	equiv_noise.set_size(2);
+	
+	mapper = NULL;
 }
 
 ZfTwRelay::~ZfTwRelay() {
@@ -598,8 +600,10 @@ void ZfTwRelay::calc_mimopnc_G(int type, double N0) {
 	}
 	
 	cmat hermG = hermitian_transpose(mimopnc_G);
-	//cmat hermG_G = hermG * mimopnc_G;
+
+	//cmat hermG_G = hermG * mimopnc_G;	// paper ??
 	cmat hermG_G = mimopnc_G * hermG;
+
 	equiv_noise(0) = hermG_G(0,0).real() * N0;
 	equiv_noise(1) = hermG_G(1,1).real() * N0;
 	//cout<<hermG_G(0,0)<<", "<<hermG_G(1,1)<<endl;
@@ -610,40 +614,46 @@ void ZfTwRelay::calc_mimopnc_G(int type, double N0) {
 
 ivec ZfTwRelay::mimo_pnc_demapping(itpp::Array<itpp::cvec> &mimo_out) {
 	
-	ivec res_label;
-	res_label.set_size(mimo_out.size()); 
+	ivec res_label = zeros_i(mimo_out.size());
+	
+	int bits_per_symbol = mapper->bits_per_symbol();
+	cvec symbols = mapper->get_symbols();
+	double upbd = 2 * abs(symbols(0).real());
+	double lobd = -upbd;
+	
+	vec y1 = zeros(2);
+	vec y2 = zeros(2);
+	
+	double n1 = equiv_noise(0)/2;
+	double n2 = equiv_noise(1)/2;
 	
 	for(int i=0; i<mimo_out.size(); i++) {
 		cvec r  = mimo_out(i);
 		cvec Gr = mimopnc_G * r;
-		complex<double> y1 = Gr(0);
-		complex<double> y2 = Gr(1);
 		
-		double n1 = equiv_noise(0)/2;
-		double n2 = equiv_noise(1)/2;
+		y1(0) = Gr(0).real();
+		y1(1) = Gr(0).imag();
 		
-		ivec lbl = "0 0";
-		//int lbl = 0 ;
+		y2(0) = Gr(1).real();
+		y2(1) = Gr(1).imag();
+			
 		
-		double numerator, denominator, LR;
-		
-		// Real part
-		numerator   = ( exp( -pow(y1.real()+2, 2) / n1) + exp( -pow((y1.real()-2), 2) / n1 ) )* 
-					  exp( -pow(y2.real(), 2) / n2 );
-		denominator = exp(-pow(y1.real(), 2) / n1) *
-					  ( exp(-pow(y2.real()+2, 2) / n2) + exp(-pow(y2.real()-2, 2) / n2) );
-		LR = numerator / denominator;
-		lbl(0) = (LR>=1 ? 0 : 1);
-		
-		// Imaginary part 
-		numerator   = ( exp( -pow(y1.imag()+2, 2) / n1) + exp( -pow((y1.imag()-2), 2) / n1 ) ) * 
-					  exp( -pow(y2.imag(), 2) / n2 );
-		denominator = exp(-pow(y1.imag(), 2) / n1) *
-					  ( exp(-pow(y2.imag()+2, 2) / n2) + exp(-pow(y2.imag()-2, 2) / n2) );
-		LR = numerator / denominator;
-		lbl(1) = (LR>=1 ? 0 : 1);
-		
-		res_label(i) = 2*lbl(1) + lbl(0);
+		ivec lbl = zeros_i(bits_per_symbol);		
+		for(int k=0; k<bits_per_symbol; k++) {
+			
+			double numerator, denominator, LR;
+			
+			numerator   = ( exp( -pow(y1(k)-upbd, 2) / (2*n1) ) + exp( -pow(y1(k)-lobd, 2) / (2*n1) ) )* 
+						  exp( -pow(y2(k), 2) / (2*n2) );
+			
+			denominator = exp(-pow(y1(k), 2) / (2*n1)) *
+						  ( exp(-pow(y2(k)-upbd, 2) / (2*n2)) + exp(-pow(y2(k)-lobd, 2) / (2*n2)) );
+			
+			LR = numerator / denominator;
+			lbl(k) = (LR>=1 ? 0 : 1);
+			
+			res_label(i) += lbl(k) << k;
+		}
 		//res_label(i) = lbl;
 	}
 

@@ -1,7 +1,12 @@
 /**
  * MIMO-PNC (QPSK)
+ *
  * S. Zhang and S. C. Liew, ¡§Physical layer network coding with multiple
  * antennas,¡¨ in Proc. IEEE WCNC 2010.
+ *
+ * TODO:
+ *	1. Fixed H
+ *
  */
 
 #include <itpp/itstat.h>
@@ -28,11 +33,20 @@ Array<cvec> to_mimo_input(Array<cvec> &user_input) {
 	return mimo_in;
 }
 
-int sym_err(bvec bv_src, ivec iv_dem) {
+int qam_sym_err(bvec bv_src, ivec iv_dem) {
 	int err = 0;
 	for(int i=0, k=0; i<iv_dem.size(); i++, k+=2) {
 		int src = (bv_src(k).value()<<1) + bv_src(k+1).value();
 		if(src!=iv_dem(i))
+			err++;
+	}
+	return err;
+}
+
+int bpsk_sym_err(bvec bv_src, ivec iv_dem) {
+	int err = 0;
+	for(int i=0; i<iv_dem.size(); i++) {
+		if(bv_src(i)!=iv_dem(i))
 			err++;
 	}
 	return err;
@@ -59,6 +73,10 @@ int main(int argc, char *argv[])
 			demap_type = 0;
 		else if (strcmp(argv[1], "mmse")==0)
 			demap_type = 1;
+		else {
+			cout<<"mimo_pnc <zf or mmse>"<<endl;
+			return 0;
+		}
 	}
 		
 	cmat read_H;
@@ -74,6 +92,8 @@ int main(int argc, char *argv[])
 
 	RNG_randomize();
 	Real_Timer tt;
+	
+	bool is_bpsk = false;
 
 	char buf[1024];
 
@@ -92,27 +112,33 @@ int main(int argc, char *argv[])
 	/////////////////////////////////////////////////
 	// Users' modulators
 	/////////////////////////////////////////////////
-	QAM mod(4);                     // 4-QAM
-	//BPSK_c mod;					// BPSK
-	
-	cvec syms = mod.get_symbols() * sqrt(mod.bits_per_symbol());
+	QAM qam(4);		// 4-QAM
+	BPSK_c bpsk;	// BPSK
+	Modulator<complex<double> > *mod = NULL;
+	if(is_bpsk) {
+		mod = &bpsk;
+	} else {
+		mod = &qam;
+	}
+	cvec syms = mod->get_symbols();
 	cout<<"constellation: "<<syms<<endl;
 
 	int block_num = 1000;
 	int msg_len = 10000;
-	int sym_len = msg_len/mod.bits_per_symbol();
-
-	// IMPORTANT!!!
-	double Es = 2;	// 2-D
+	int bits_per_symbol = mod->bits_per_symbol();
 	
+	double Es = 1;	
 	vec EsN0dB  = linspace(0,20,21);
 	
 	if(!is_fixed_H) {
-		block_num = 200000;
+		// block_num = 200000;
+		block_num = 100000;
 		msg_len = 1000;	
-		sym_len = msg_len/mod.bits_per_symbol(); 
-		EsN0dB  = linspace(0,35,36);	// fading
+		// EsN0dB  = linspace(0,35,36);	// fading
+		EsN0dB  = linspace(30, 30, 1);	// fading
 	}
+	
+	int sym_len = msg_len/bits_per_symbol;
 
 	vec EsN0    = inv_dB(EsN0dB);
 	vec N0      = Es * pow(EsN0, -1.0);
@@ -136,6 +162,7 @@ int main(int argc, char *argv[])
 	// PNC Relay
 	/////////////////////////////////////////////////
 	ZfTwRelay relay;
+	relay.set_mapper(mod);
 	
 	cmat H;
 	if(is_fixed_H) {
@@ -166,8 +193,8 @@ int main(int argc, char *argv[])
 			//======================================
 			// modulation
 			//======================================
-			cvec cv_txsig_u1 = mod.modulate_bits(bv_msg_u1) * sqrt(mod.bits_per_symbol());
-			cvec cv_txsig_u2 = mod.modulate_bits(bv_msg_u2) * sqrt(mod.bits_per_symbol());
+			cvec cv_txsig_u1 = mod->modulate_bits(bv_msg_u1);
+			cvec cv_txsig_u2 = mod->modulate_bits(bv_msg_u2);
 
 			//======================================
 			// prepare proper format for mimo input
@@ -199,8 +226,11 @@ int main(int argc, char *argv[])
 			
 			// cout<<"bv_msg_xor="<<bv_msg_xor<<endl;
 			// cout<<"dem_sym="<<dem_sym<<endl;
-
-			err += sym_err(bv_msg_xor, dem_sym);
+			
+			if(is_bpsk)
+				err += bpsk_sym_err(bv_msg_xor, dem_sym);
+			else
+				err += qam_sym_err(bv_msg_xor, dem_sym);
 
 			tot_sym += sym_len;
 			printf("EsN0dB=%4.1f, #bk=%6i, #err=%6i, SER=%1.3e\r",
