@@ -24,6 +24,9 @@ public:
 	itpp::ivec bpsk_nc_ml_demapping(itpp::Array<std::complex<double> > &miso_out, itpp::cvec symbols);
 
 
+	// MRC-L
+	itpp::ivec bpsk_mrc_pnc_demapping(itpp::Array<std::complex<double> > &miso_out);
+
 protected:
 	// 2x1 channel vector
 	itpp::cvec channel;

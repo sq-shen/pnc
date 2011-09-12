@@ -83,7 +83,27 @@ ivec Ant1Relay::bpsk_nc_ml_demapping(Array<complex<double> > &miso_out, cvec sym
 }
 
 
+ivec Ant1Relay::bpsk_mrc_pnc_demapping(Array<complex<double> > &miso_output) {
 
+	ivec res_label;
+	res_label.set_size(miso_output.size());
+
+	for(int i=0; i<miso_output.size(); i++) {
+
+		complex<double> in = miso_output(i);
+
+		complex<double> Ryh1 = conj(in) * channel(0);
+		complex<double> Ryh2 = conj(in) * channel(1);
+		complex<double> Rh1h2 = conj(channel(0)) * channel(1);
+
+		double lhs = abs((Ryh1 + Ryh2).real());
+		double rhs = abs((Ryh1 - Ryh2).real()) + 2 * Rh1h2.real();
+
+		res_label(i) = (lhs>=rhs ? 0 : 1);
+	}
+
+	return res_label;
+}
 
 
 

@@ -161,8 +161,9 @@ int main(int argc, char *argv[])
 			// MIMO-PNC Demapping
 			//======================================
 			ivec dem_sym;
-			dem_sym = relay.bpsk_chcord_demapping(miso_output);
-//			dem_sym = relay.bpsk_nc_ml_demapping(miso_output, syms);
+//			dem_sym = relay.bpsk_chcord_demapping(miso_output);
+			dem_sym = relay.bpsk_nc_ml_demapping(miso_output, syms);
+//			dem_sym = relay.bpsk_mrc_pnc_demapping(miso_output);
 
 			// cout<<"bv_msg_xor="<<bv_msg_xor<<endl;
 			// cout<<"dem_sym="<<dem_sym<<endl;
