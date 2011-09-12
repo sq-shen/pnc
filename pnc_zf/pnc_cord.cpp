@@ -1,18 +1,13 @@
 /**
- * MRC PNC (BPSK)
- *
- * H. Gao, X. Su., T. Lv, ��Combined MRC-Like Reception and Transmit Diversity
- * for Physical-Layer Network Coding with Multiple-Antenna Relay,�� in Proc. IEEE International
- * Conference on Telecommunications, 2011.
- *
+ * PNC - Change of basis
  *
  */
 
 #include <itpp/itstat.h>
 #include <itpp/itcomm.h>
 
-#include "mimomac.h"
-#include "zftwrelay.h"
+#include "sisomac.h"
+#include "ant1relay.h"
 
 using namespace itpp;
 using namespace std;
@@ -51,13 +46,6 @@ int bpsk_sym_err(bvec bv_src, ivec iv_dem) {
 	return err;
 }
 
-double norm2_a_pinvH(vec a, cmat pinvH) {
-	cvec ca = to_cvec(a);
-	cmat pinvHt = transpose(pinvH);
-	cvec res = pinvHt * ca;
-	return energy(res);
-}
-
 
 int main(int argc, char *argv[])
 {
@@ -70,14 +58,14 @@ int main(int argc, char *argv[])
 
 	// log file
 	ofstream log;
-	log.open("log_mrc_pnc.txt", ios::app|ios::out);
+	log.open("log_pnc_cord.txt", ios::app|ios::out);
 	log<<"==================================================================================================="<<endl;
 
 	//////////////////////////////////////////////////
 	// Simulation parameters
 	//////////////////////////////////////////////////
 	int num_user = 2;
-	int num_rx_ant = 2;
+	int num_rx_ant = 1;
 	
 	
 	/////////////////////////////////////////////////
@@ -94,13 +82,14 @@ int main(int argc, char *argv[])
 	cvec syms = mod->get_symbols();
 	cout<<"constellation: "<<syms<<endl;
 
-	int block_num = 1000;
+	int block_num = 10000;
 	int msg_len = 1000;
 	int bits_per_symbol = mod->bits_per_symbol();
 	int sym_len = msg_len/bits_per_symbol;
 	
 	double Es = 1;	
-	vec EsN0dB  = linspace(0,20,21);	
+//	vec EsN0dB  = linspace(0,20,21);
+	vec EsN0dB  = linspace(10,30,21);
 	vec EsN0    = inv_dB(EsN0dB);
 	vec N0      = Es * pow(EsN0, -1.0);
 	vec sqrt_N0 = sqrt(N0);
@@ -117,16 +106,14 @@ int main(int argc, char *argv[])
 	/////////////////////////////////////////////////
 	// Channel initialization
 	/////////////////////////////////////////////////
-	MimoMac mimomac(num_user, num_rx_ant);
-	
+	SisoMac sisomac(num_user);
+
 	/////////////////////////////////////////////////
 	// PNC Relay
 	/////////////////////////////////////////////////
-	ZfTwRelay relay;
-	relay.set_mapper(mod);
-	
-	cmat H;
-	
+	Ant1Relay relay;
+
+
 	/////////////////////////////////////////////////
 	// Simulation
 	/////////////////////////////////////////////////
@@ -161,25 +148,25 @@ int main(int argc, char *argv[])
 			//======================================
 			// channel
 			//======================================
-	
-			mimomac.genH();
-			H = mimomac.get_H();
-			relay.set_H(H);
-			//relay.calc_mimopnc_G(demap_type, sigma2(i));
-	
-			mimomac.set_N0(N0(i));
-			Array<cvec> mimo_output = mimomac.channel(mimo_input);
+			sisomac.gen_h();
+			sisomac.set_N0(N0(i));
+			Array<complex<double> > miso_output = sisomac.channel(mimo_input);
+
+			// relay
+			cvec h = sisomac.get_h();
+			relay.set_channel(h);
 
 
 			//======================================
 			// MIMO-PNC Demapping
 			//======================================
 			ivec dem_sym;
-			dem_sym = relay.bpsk_mrc_pnc_demapping(mimo_output);
-			
+			dem_sym = relay.bpsk_chcord_demapping(miso_output);
+//			dem_sym = relay.bpsk_nc_ml_demapping(miso_output, syms);
+
 			// cout<<"bv_msg_xor="<<bv_msg_xor<<endl;
 			// cout<<"dem_sym="<<dem_sym<<endl;
-			
+
 			if(is_bpsk)
 				err += bpsk_sym_err(bv_msg_xor, dem_sym);
 			else
@@ -188,18 +175,6 @@ int main(int argc, char *argv[])
 			tot_sym += sym_len;
 			printf("EsN0dB=%4.1f, #bk=%6i, #err=%6i, SER=%1.3e\r",
 					EsN0dB(i), bk, err, ((double)err)/tot_sym);
-
-
-			// cout<<bv_msg_u1<<endl;
-			// cout<<cv_txsig_u1<<endl;
-
-			// cout<<bv_msg_u2<<endl;
-			// cout<<cv_txsig_u2<<endl;
-
-			// cout<<user_input<<endl;
-			// cout<<mimo_input<<endl;
-
-			// cout<<mimo_output<<endl;
 
 		}
 		printf("\n");

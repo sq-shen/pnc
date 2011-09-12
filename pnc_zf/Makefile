@@ -37,6 +37,9 @@ COMM_OBJS :=
 PROGRAM := pnc_zf
 OBJS := pnc_zf.o
 
+PNCCORD_PROG := pnc_cord
+PNCCORD_OBJS := pnc_cord.o ant1relay.o sisomac.o
+
 PNCML_PROG := pnc_ml
 PNCML_OBJS := pnc_ml.o
 
@@ -66,7 +69,7 @@ COMM_OBJS += zftwrelay.o
 
 
 #all: $(PROGRAM) $(PNCML_PROG) $(PNCMMSE_PROG) $(MIMOPNC_PROG) $(GENCH_PROG) $(PNCHARD_PROG) $(TESTEIGEN_PROG) $(DRAWCONST_PROG) $(MRCPNC_PROG)
-all: $(MRCPNC_PROG)
+all: $(PNCCORD_PROG)
 
 $(BIN_DIR):
 	@[ -d $@ ] || mkdir $@ 
@@ -114,6 +117,14 @@ $(BIN_DIR)/$(MRCPNC_PROG): $(addprefix $(BIN_DIR)/, $(MRCPNC_OBJS)) $(addprefix 
 	$(CXX) $(LIBS) -o $@ $^
 	
 #
+# pnc_cord
+#
+$(PNCCORD_PROG): $(BIN_DIR) $(BIN_DIR)/$(PNCCORD_PROG)
+
+$(BIN_DIR)/$(PNCCORD_PROG): $(addprefix $(BIN_DIR)/, $(PNCCORD_OBJS))
+	$(CXX) $(LIBS) -o $@ $^
+	
+#
 # draw_const
 #
 $(DRAWCONST_PROG): $(BIN_DIR) $(BIN_DIR)/$(DRAWCONST_PROG)
@@ -158,10 +169,10 @@ $(BIN_DIR)/%.o: %.cpp
 # 
 ############################################################
 
-.PHONY: all clean $(PROGRAM) $(GENCH_PROG) $(PNCHARD_PROG) $(TESTEIGEN_PROG) $(PNCML_PROG) $(PNCMMSE_PROG) $(DRAWCONST_PROG) $(MIMOPNC_PROG) $(MRCPNC_PROG)
+.PHONY: all clean $(PROGRAM) $(GENCH_PROG) $(PNCHARD_PROG) $(TESTEIGEN_PROG) $(PNCML_PROG) $(PNCMMSE_PROG) $(DRAWCONST_PROG) $(MIMOPNC_PROG) $(MRCPNC_PROG) $(PNCCORD_PROG)
 
 	
 #clean:
 #	@rm -rf dbglog1.txt dbglog2.txt $(BIN_DIR)
 clean:
-	@rm -rf dbglog1.txt dbglog2.txt $(BIN_DIR)/*.o mrc_pnc
+	@rm -rf dbglog1.txt dbglog2.txt $(BIN_DIR)/*.o pnc_cord
