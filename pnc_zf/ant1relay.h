@@ -26,6 +26,9 @@ public:
 
 	// MRC-L
 	itpp::ivec bpsk_mrc_pnc_demapping(itpp::Array<std::complex<double> > &miso_out);
+	
+	// proj
+	itpp::ivec bpsk_vecproj_pnc_demapping(itpp::Array<std::complex<double> > &miso_out);
 
 protected:
 	// 2x1 channel vector

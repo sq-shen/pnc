@@ -106,4 +106,32 @@ ivec Ant1Relay::bpsk_mrc_pnc_demapping(Array<complex<double> > &miso_output) {
 }
 
 
+ivec Ant1Relay::bpsk_vecproj_pnc_demapping(Array<complex<double> > &miso_output) {
+
+	ivec res_label;
+	res_label.set_size(miso_output.size());
+	
+	int idx = 0;
+	max(abs(channel), idx);
+	complex<double> hmax = channel(idx);
+	complex<double> hmin = channel((idx==0 ? 1 : 0));
+	
+	for(int i=0; i<miso_output.size(); i++) {
+		
+		int b1 = 0, b2 = 0;
+		complex<double> in = miso_output(i);
+				
+		b1 = ((conj(in)*hmax).real() >=0 ? 0 : 1);
+		
+		complex<double> v2 = in - (1-2*b1)*hmax;
+		b2 = ((conj(v2)*hmin).real() >=0 ? 0 : 1);
+		
+		res_label(i) = (b1 + b2) % 2;
+	}
+	
+	
+	return res_label;
+}
+
+
 

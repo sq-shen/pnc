@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
 	// Simulation parameters
 	//////////////////////////////////////////////////
 	int num_user = 2;
-	int num_rx_ant = 1;
+	//int num_rx_ant = 1;
 	
 	
 	/////////////////////////////////////////////////
@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
 	int sym_len = msg_len/bits_per_symbol;
 	
 	double Es = 1;	
-//	vec EsN0dB  = linspace(0,20,21);
+	// vec EsN0dB  = linspace(30,30,1);
 	vec EsN0dB  = linspace(10,30,21);
 	vec EsN0    = inv_dB(EsN0dB);
 	vec N0      = Es * pow(EsN0, -1.0);
@@ -161,9 +161,11 @@ int main(int argc, char *argv[])
 			// MIMO-PNC Demapping
 			//======================================
 			ivec dem_sym;
-//			dem_sym = relay.bpsk_chcord_demapping(miso_output);
-			dem_sym = relay.bpsk_nc_ml_demapping(miso_output, syms);
-//			dem_sym = relay.bpsk_mrc_pnc_demapping(miso_output);
+			// dem_sym = relay.bpsk_chcord_demapping(miso_output);
+			// dem_sym = relay.bpsk_nc_ml_demapping(miso_output, syms);
+			dem_sym = relay.bpsk_mrc_pnc_demapping(miso_output);
+
+			// dem_sym = relay.bpsk_vecproj_pnc_demapping(miso_output);
 
 			// cout<<"bv_msg_xor="<<bv_msg_xor<<endl;
 			// cout<<"dem_sym="<<dem_sym<<endl;
