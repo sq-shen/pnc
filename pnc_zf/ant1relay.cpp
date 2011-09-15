@@ -219,7 +219,8 @@ ivec Ant1Relay::qpsk_vecproj_pnc_demapping(Array<complex<double> > &miso_output,
 		}
 		msb = (b1==b2 ? 0 : 1);
 
-		DBGCMD(cout<<"r1="<<r1<<", r2="<<r2<<endl);
+		DBGCMD(cout<<"r1_hmin_r90="<<r1_hmin_r90<<endl);
+		DBGCMD(cout<<"r2_hmin_r90="<<r2_hmin_r90<<endl);
 
 		
 		/*
