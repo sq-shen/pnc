@@ -4,8 +4,8 @@
  *  Created on: Sep 12, 2011
  *      Author: ivan
  */
-
-#include "ant1relay.h"
+ 
+ #include "ant1relay.h"
 
 using namespace itpp;
 using namespace std;
@@ -131,6 +131,115 @@ ivec Ant1Relay::bpsk_vecproj_pnc_demapping(Array<complex<double> > &miso_output)
 	
 	
 	return res_label;
+}
+
+
+ivec Ant1Relay::qpsk_vecproj_pnc_demapping(Array<complex<double> > &miso_output, cvec &symbols) {
+
+	ivec res_label;
+	res_label.set_size(miso_output.size());
+	
+	int idx = 0;
+	max(abs(channel), idx);
+	complex<double> hmax 	 = channel(idx);
+	complex<double> hmax_r90 = hmax * polar(1.0, pi/2);
+		
+	complex<double> hmin  	 = channel((idx==0 ? 1 : 0));
+	complex<double> hmin_r90 = hmin * polar(1.0, pi/2);
+	
+	for(int i=0; i<miso_output.size(); i++) {
+		
+		int xdir, ydir;
+		int b1, b2;
+		complex<double> r1, r2;
+		complex<double> in = miso_output(i);
+		
+		xdir = ((conj(in)*hmax_r90).real() >=0 ? 0 : 1);
+		ydir = ((conj(in)*hmax).real() >=0 ? 0 : 1);
+		
+		/*
+		 *	first bit
+		 */
+		b1 = xdir;
+		r1 = in - symbols(2*b1) * hmax;
+		r2 = in - symbols(2*b1+1) * hmax;
+		double r1_hmin_r90 = (conj(r1)*hmin_r90).real();
+		double r2_hmin_r90 = (conj(r2)*hmin_r90).real();
+		if(r1_hmin_r90>=0 && r2_hmin_r90>=0) {
+			b2 = 0;
+		} else if(r1_hmin_r90<0 && r2_hmin_r90<0) {
+			b1 = 1;
+		} else {
+			double r1_hmin = abs(conj(r1)*hmin);
+			double r2_hmin = abs(conj(r2)*hmin);
+			if(r1_hmin<=r2_hmin) {
+				b2 = (r1_hmin_r90>=0 ? 0 : 1);
+			} else {
+				b2 = (r2_hmin_r90>=0 ? 0 : 1);
+			}
+		}
+		res_label(i) = 2 * ((b1 + b2) % 2);
+		
+		/*
+		 *	second bit
+		 */
+	    b1 = ydir;
+		r1 = in - symbols(b1) * hmax;
+		r2 = in - symbols(2+b1) * hmax;
+		double r1_hmin = (conj(r1)*hmin).real();
+		double r2_hmin = (conj(r2)*hmin).real();
+		if(r1_hmin>=0 && r2_hmin>=0) {
+			b2 = 0;
+		} else if(r1_hmin<0 && r2_hmin<0) {
+			b1 = 1;
+		} else {
+			double r1_hmin_r90 = abs(conj(r1)*hmin_r90);
+			double r2_hmin_r90 = abs(conj(r2)*hmin_r90);
+			if(r1_hmin_r90<=r2_hmin_r90) {
+				b2 = (r1_hmin>=0 ? 0 : 1);
+			} else {
+				b2 = (r2_hmin>=0 ? 0 : 1);
+			}
+		}
+		res_label(i) += ((b1 + b2) % 2);
+	}
+	
+	return res_label;
+}
+
+
+ivec Ant1Relay::nc_ml_demapping(Array<complex<double> > &miso_output, cvec &symbols) {
+
+	ivec res_label;
+	res_label.set_size(miso_output.size());
+
+	for(int i=0; i<miso_output.size(); i++) {
+
+		complex<double> Yr = miso_output(i);
+		cvec X = zeros_c(2);
+
+		double min_norm = numeric_limits<double>::max();
+		int min_pt = -1;
+
+
+		for(int q=0; q<symbols.size(); q++) {
+			X(0) = symbols(q);
+			for(int r=0; r<symbols.size(); r++) {
+				X(1) = symbols(r);
+				complex<double> HX = channel * X;
+				double calc_norm = norm(Yr-HX);
+				if(calc_norm < min_norm) {
+					min_norm = calc_norm;
+					min_pt = (q^r) & 0x03; // xor
+				}
+			}
+		}
+
+		res_label(i) = min_pt;
+	}
+
+	return res_label;
+
 }
 
 

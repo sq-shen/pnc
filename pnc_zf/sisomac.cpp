@@ -31,8 +31,8 @@ Array<complex<double> > SisoMac::channel(const Array<cvec> &tx_signals) {
 	double sigma = sqrt(N0);
 	for(int i=0; i<tx_signals.size(); i++) {
 		cvec in = tx_signals(i);
-		complex<double> out = h * in + sigma*randn_c();	// y = hx + z
-		// complex<double> out = h * in;	// zero noise: y = hx
+		// complex<double> out = h * in + sigma*randn_c();	// y = hx + z
+		complex<double> out = h * in;	// zero noise: y = hx
 		rx_signals(i) = out;
 	}
 

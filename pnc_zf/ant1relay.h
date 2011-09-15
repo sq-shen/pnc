@@ -29,6 +29,10 @@ public:
 	
 	// proj
 	itpp::ivec bpsk_vecproj_pnc_demapping(itpp::Array<std::complex<double> > &miso_out);
+	itpp::ivec qpsk_vecproj_pnc_demapping(itpp::Array<std::complex<double> > &miso_out, itpp::cvec &symbols);
+	
+	// NC-ML
+	itpp::ivec nc_ml_demapping(itpp::Array<std::complex<double> > &miso_out, itpp::cvec &symbols);
 
 protected:
 	// 2x1 channel vector

@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 	RNG_randomize();
 	Real_Timer tt;
 	
-	bool is_bpsk = true;
+	bool is_bpsk = false;
 
 	char buf[1024];
 
@@ -82,14 +82,14 @@ int main(int argc, char *argv[])
 	cvec syms = mod->get_symbols();
 	cout<<"constellation: "<<syms<<endl;
 
-	int block_num = 10000;
+	int block_num = 1000;
 	int msg_len = 1000;
 	int bits_per_symbol = mod->bits_per_symbol();
 	int sym_len = msg_len/bits_per_symbol;
 	
 	double Es = 1;	
-	// vec EsN0dB  = linspace(30,30,1);
-	vec EsN0dB  = linspace(10,30,21);
+	vec EsN0dB  = linspace(30,30,1);
+	// vec EsN0dB  = linspace(10,30,21);
 	vec EsN0    = inv_dB(EsN0dB);
 	vec N0      = Es * pow(EsN0, -1.0);
 	vec sqrt_N0 = sqrt(N0);
@@ -163,9 +163,12 @@ int main(int argc, char *argv[])
 			ivec dem_sym;
 			// dem_sym = relay.bpsk_chcord_demapping(miso_output);
 			// dem_sym = relay.bpsk_nc_ml_demapping(miso_output, syms);
-			dem_sym = relay.bpsk_mrc_pnc_demapping(miso_output);
-
+			// dem_sym = relay.bpsk_mrc_pnc_demapping(miso_output);
 			// dem_sym = relay.bpsk_vecproj_pnc_demapping(miso_output);
+			
+			// QPSK
+			// dem_sym = relay.nc_ml_demapping(miso_output, syms);
+			dem_sym = relay.qpsk_vecproj_pnc_demapping(miso_output, syms);
 
 			// cout<<"bv_msg_xor="<<bv_msg_xor<<endl;
 			// cout<<"dem_sym="<<dem_sym<<endl;
