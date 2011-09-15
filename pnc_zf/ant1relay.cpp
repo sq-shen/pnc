@@ -10,6 +10,32 @@
 using namespace itpp;
 using namespace std;
 
+#define DBGSHOW
+
+#ifdef DBGSHOW
+#define DBGCMD(cmd) \
+	cmd;
+
+#define SHOW1D(ary, size, type) \
+{	for(int i=0; i<size; i++) \
+		cout<<(type)(ary[i])<<" "; \
+	cout<<endl; }
+
+#define SHOW2D(ary, row, col, type) \
+{	for(int i=0; i<row; i++){ \
+		for(int j=0; j<col; j++) \
+			cout<<(type)(ary[i][j])<<" "; \
+		cout<<endl; \
+	}}
+#else
+#define DBGCMD(cmd)
+#define SHOW1D(ary, size, type)
+#define SHOW2D(ary, row, col, type)
+#endif
+
+
+
+
 Ant1Relay::Ant1Relay() {
 	channel.set_size(2);
 }
@@ -147,38 +173,54 @@ ivec Ant1Relay::qpsk_vecproj_pnc_demapping(Array<complex<double> > &miso_output,
 	complex<double> hmin  	 = channel((idx==0 ? 1 : 0));
 	complex<double> hmin_r90 = hmin * polar(1.0, pi/2);
 	
+	DBGCMD(cout<<"hmax="<<hmax<<endl);
+	DBGCMD(cout<<"hmax_r90="<<hmax_r90<<endl);
+	DBGCMD(cout<<"hmin="<<hmin<<endl);
+	DBGCMD(cout<<"hmin_r90="<<hmin_r90<<endl);
+
 	for(int i=0; i<miso_output.size(); i++) {
 		
 		int xdir, ydir;
 		int b1, b2;
+		int msb, lsb;
 		complex<double> r1, r2;
 		complex<double> in = miso_output(i);
 		
+		DBGCMD(cout<<"in="<<in<<endl);
+
 		xdir = ((conj(in)*hmax_r90).real() >=0 ? 0 : 1);
 		ydir = ((conj(in)*hmax).real() >=0 ? 0 : 1);
 		
+		DBGCMD(cout<<"xdir="<<xdir<<", ydir="<<ydir<<endl);
+
+		double r1_hmin, r2_hmin;
+		double r1_hmin_r90, r2_hmin_r90;
+
 		/*
 		 *	first bit
 		 */
 		b1 = xdir;
 		r1 = in - symbols(2*b1) * hmax;
 		r2 = in - symbols(2*b1+1) * hmax;
-		double r1_hmin_r90 = (conj(r1)*hmin_r90).real();
-		double r2_hmin_r90 = (conj(r2)*hmin_r90).real();
+		r1_hmin_r90 = (conj(r1)*hmin_r90).real();
+		r2_hmin_r90 = (conj(r2)*hmin_r90).real();
 		if(r1_hmin_r90>=0 && r2_hmin_r90>=0) {
 			b2 = 0;
 		} else if(r1_hmin_r90<0 && r2_hmin_r90<0) {
 			b1 = 1;
 		} else {
-			double r1_hmin = abs(conj(r1)*hmin);
-			double r2_hmin = abs(conj(r2)*hmin);
+			r1_hmin = abs(conj(r1)*hmin);
+			r2_hmin = abs(conj(r2)*hmin);
 			if(r1_hmin<=r2_hmin) {
 				b2 = (r1_hmin_r90>=0 ? 0 : 1);
 			} else {
 				b2 = (r2_hmin_r90>=0 ? 0 : 1);
 			}
 		}
-		res_label(i) = 2 * ((b1 + b2) % 2);
+		msb = (b1==b2 ? 0 : 1);
+
+		DBGCMD(cout<<"r1="<<r1<<", r2="<<r2<<endl);
+
 		
 		/*
 		 *	second bit
@@ -186,22 +228,26 @@ ivec Ant1Relay::qpsk_vecproj_pnc_demapping(Array<complex<double> > &miso_output,
 	    b1 = ydir;
 		r1 = in - symbols(b1) * hmax;
 		r2 = in - symbols(2+b1) * hmax;
-		double r1_hmin = (conj(r1)*hmin).real();
-		double r2_hmin = (conj(r2)*hmin).real();
+		r1_hmin = (conj(r1)*hmin).real();
+		r2_hmin = (conj(r2)*hmin).real();
 		if(r1_hmin>=0 && r2_hmin>=0) {
 			b2 = 0;
 		} else if(r1_hmin<0 && r2_hmin<0) {
 			b1 = 1;
 		} else {
-			double r1_hmin_r90 = abs(conj(r1)*hmin_r90);
-			double r2_hmin_r90 = abs(conj(r2)*hmin_r90);
+			r1_hmin_r90 = abs(conj(r1)*hmin_r90);
+			r2_hmin_r90 = abs(conj(r2)*hmin_r90);
 			if(r1_hmin_r90<=r2_hmin_r90) {
 				b2 = (r1_hmin>=0 ? 0 : 1);
 			} else {
 				b2 = (r2_hmin>=0 ? 0 : 1);
 			}
 		}
-		res_label(i) += ((b1 + b2) % 2);
+		lsb = (b1==b2 ? 0 : 1);
+
+		res_label(i) = msb*2 + lsb;
+
+		DBGCMD(cout<<"[b1 b2]=["<<msb<<" "<<lsb<<"]"<<endl);
 	}
 	
 	return res_label;

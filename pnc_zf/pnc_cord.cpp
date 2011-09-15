@@ -82,8 +82,11 @@ int main(int argc, char *argv[])
 	cvec syms = mod->get_symbols();
 	cout<<"constellation: "<<syms<<endl;
 
-	int block_num = 1000;
-	int msg_len = 1000;
+//	int block_num = 1000;
+//	int msg_len = 1000;
+	int block_num = 1;
+	int msg_len = 2;
+
 	int bits_per_symbol = mod->bits_per_symbol();
 	int sym_len = msg_len/bits_per_symbol;
 	
@@ -152,10 +155,14 @@ int main(int argc, char *argv[])
 			sisomac.set_N0(N0(i));
 			Array<complex<double> > miso_output = sisomac.channel(mimo_input);
 
+
 			// relay
 			cvec h = sisomac.get_h();
 			relay.set_channel(h);
 
+			cout<<"h="<<h<<endl;
+			cout<<"|h1|="<<abs(h(0))<<", |h2|="<<abs(h(1))<<endl;
+			cout<<"| |h1|-|h2| |="<<abs(abs(h(0)) - abs(h(1)))<<endl;
 
 			//======================================
 			// MIMO-PNC Demapping
@@ -181,6 +188,20 @@ int main(int argc, char *argv[])
 			tot_sym += sym_len;
 			printf("EsN0dB=%4.1f, #bk=%6i, #err=%6i, SER=%1.3e\r",
 					EsN0dB(i), bk, err, ((double)err)/tot_sym);
+
+			cout<<endl;
+			cout<<"bv_msg_u1="<<bv_msg_u1<<endl;
+			cout<<"cv_txsig_u1="<<cv_txsig_u1<<endl;
+
+			cout<<"bv_msg_u2="<<bv_msg_u2<<endl;
+			cout<<"cv_txsig_u2="<<cv_txsig_u2<<endl;
+
+			cout<<"bv_msg_xor="<<bv_msg_xor<<endl;
+
+			// cout<<user_input<<endl;
+			// cout<<mimo_input<<endl;
+
+			// cout<<mimo_output<<endl;
 
 		}
 		printf("\n");
