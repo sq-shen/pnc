@@ -152,107 +152,160 @@ ivec Ant1Relay::bpsk_vecproj_pnc_demapping(Array<complex<double> > &miso_output)
 		complex<double> v2 = in - (1-2*b1)*hmax;
 		b2 = ((conj(v2)*hmin).real() >=0 ? 0 : 1);
 		
-		res_label(i) = (b1 + b2) % 2;
+		res_label(i) = (b1 ^ b2) & 0x01;
 	}
 	
 	
 	return res_label;
 }
+
+void Ant1Relay::init_sp_const(cvec &m1, cvec &m2) {
+
+	// Generate the superimposed points
+	int k = 0;
+	cvec orin_pt = zeros_c(2);
+	for(int i=0; i<m1.size(); i++) {
+		orin_pt(0) = m1(i);
+		for(int j=0; j<m2.size(); j++) {
+			orin_pt(1) = m2(j);
+
+			complex<double> pt = channel * orin_pt;
+			int label = (i^j) & 0x03; // xor
+			//cout<<i<<","<<j<<","<<label<<endl;
+
+			sp_constellation(k).pt    = pt;
+			sp_constellation(k).label = label;
+			k++;
+		}
+	}
+
+}
+
+void Ant1Relay::show_sp_constellation() {
+	cout<<"sp_constellation: "<<endl;
+	for(int i=0; i<sp_constellation.size(); i++) {
+		cout<<"pt="<<sp_constellation(i).pt<<",label="<<sp_constellation(i).label<<endl;
+	}
+}
+
+
+Array<proj_pt_info> Ant1Relay::init_proj_pt(cvec &ch, cvec &symbols) {
+
+	Array<proj_pt_info> res_ary;
+
+	init_sp_const(symbols, symbols);
+	show_sp_constellation();
+
+	return res_ary;
+}
+
+
 
 
 ivec Ant1Relay::qpsk_vecproj_pnc_demapping(Array<complex<double> > &miso_output, cvec &symbols) {
 
 	ivec res_label;
 	res_label.set_size(miso_output.size());
-	
-	int idx = 0;
-	max(abs(channel), idx);
-	complex<double> hmax 	 = channel(idx);
-	complex<double> hmax_r90 = hmax * polar(1.0, pi/2);
-		
-	complex<double> hmin  	 = channel((idx==0 ? 1 : 0));
-	complex<double> hmin_r90 = hmin * polar(1.0, pi/2);
-	
-	DBGCMD(cout<<"hmax="<<hmax<<endl);
-	DBGCMD(cout<<"hmax_r90="<<hmax_r90<<endl);
-	DBGCMD(cout<<"hmin="<<hmin<<endl);
-	DBGCMD(cout<<"hmin_r90="<<hmin_r90<<endl);
 
-	for(int i=0; i<miso_output.size(); i++) {
-		
-		int xdir, ydir;
-		int b1, b2;
-		int msb, lsb;
-		complex<double> r1, r2;
-		complex<double> in = miso_output(i);
-		
-		DBGCMD(cout<<"in="<<in<<endl);
 
-		xdir = ((conj(in)*hmax_r90).real() >=0 ? 0 : 1);
-		ydir = ((conj(in)*hmax).real() >=0 ? 0 : 1);
-		
-		DBGCMD(cout<<"xdir="<<xdir<<", ydir="<<ydir<<endl);
 
-		double r1_hmin, r2_hmin;
-		double r1_hmin_r90, r2_hmin_r90;
 
-		/*
-		 *	first bit
-		 */
-		b1 = xdir;
-		r1 = in - symbols(2*b1) * hmax;
-		r2 = in - symbols(2*b1+1) * hmax;
-		r1_hmin_r90 = (conj(r1)*hmin_r90).real();
-		r2_hmin_r90 = (conj(r2)*hmin_r90).real();
-		if(r1_hmin_r90>=0 && r2_hmin_r90>=0) {
-			b2 = 0;
-		} else if(r1_hmin_r90<0 && r2_hmin_r90<0) {
-			b1 = 1;
-		} else {
-			r1_hmin = abs(conj(r1)*hmin);
-			r2_hmin = abs(conj(r2)*hmin);
-			if(r1_hmin<=r2_hmin) {
-				b2 = (r1_hmin_r90>=0 ? 0 : 1);
-			} else {
-				b2 = (r2_hmin_r90>=0 ? 0 : 1);
-			}
-		}
-		msb = (b1==b2 ? 0 : 1);
-
-		DBGCMD(cout<<"r1_hmin_r90="<<r1_hmin_r90<<endl);
-		DBGCMD(cout<<"r2_hmin_r90="<<r2_hmin_r90<<endl);
-
-		
-		/*
-		 *	second bit
-		 */
-	    b1 = ydir;
-		r1 = in - symbols(b1) * hmax;
-		r2 = in - symbols(2+b1) * hmax;
-		r1_hmin = (conj(r1)*hmin).real();
-		r2_hmin = (conj(r2)*hmin).real();
-		if(r1_hmin>=0 && r2_hmin>=0) {
-			b2 = 0;
-		} else if(r1_hmin<0 && r2_hmin<0) {
-			b1 = 1;
-		} else {
-			r1_hmin_r90 = abs(conj(r1)*hmin_r90);
-			r2_hmin_r90 = abs(conj(r2)*hmin_r90);
-			if(r1_hmin_r90<=r2_hmin_r90) {
-				b2 = (r1_hmin>=0 ? 0 : 1);
-			} else {
-				b2 = (r2_hmin>=0 ? 0 : 1);
-			}
-		}
-		lsb = (b1==b2 ? 0 : 1);
-
-		res_label(i) = msb*2 + lsb;
-
-		DBGCMD(cout<<"[b1 b2]=["<<msb<<" "<<lsb<<"]"<<endl);
-	}
-	
 	return res_label;
 }
+
+//ivec Ant1Relay::qpsk_vecproj_pnc_demapping(Array<complex<double> > &miso_output, cvec &symbols) {
+//
+//	ivec res_label;
+//	res_label.set_size(miso_output.size());
+//
+//	int idx = 0;
+//	max(abs(channel), idx);
+//	complex<double> hmax 	 = channel(idx);
+//	complex<double> hmax_r90 = hmax * polar(1.0, pi/2);
+//
+//	complex<double> hmin  	 = channel((idx==0 ? 1 : 0));
+//	complex<double> hmin_r90 = hmin * polar(1.0, pi/2);
+//
+//	DBGCMD(cout<<"hmax="<<hmax<<endl);
+//	DBGCMD(cout<<"hmax_r90="<<hmax_r90<<endl);
+//	DBGCMD(cout<<"hmin="<<hmin<<endl);
+//	DBGCMD(cout<<"hmin_r90="<<hmin_r90<<endl);
+//
+//	for(int i=0; i<miso_output.size(); i++) {
+//
+//		int xdir, ydir;
+//		int b1, b2;
+//		int msb, lsb;
+//		complex<double> r1, r2;
+//		complex<double> in = miso_output(i);
+//
+//		DBGCMD(cout<<"in="<<in<<endl);
+//
+//		xdir = ((conj(in)*hmax_r90).real() >=0 ? 0 : 1);
+//		ydir = ((conj(in)*hmax).real() >=0 ? 0 : 1);
+//
+//		DBGCMD(cout<<"xdir="<<xdir<<", ydir="<<ydir<<endl);
+//
+//		double r1_hmin, r2_hmin;
+//		double r1_hmin_r90, r2_hmin_r90;
+//
+//		/*
+//		 *	first bit
+//		 */
+//		b1 = xdir;
+//		r1 = in - symbols(2*b1) * hmax;
+//		r2 = in - symbols(2*b1+1) * hmax;
+//		r1_hmin_r90 = (conj(r1)*hmin_r90).real();
+//		r2_hmin_r90 = (conj(r2)*hmin_r90).real();
+//		if(r1_hmin_r90>=0 && r2_hmin_r90>=0) {
+//			b2 = 0;
+//		} else if(r1_hmin_r90<0 && r2_hmin_r90<0) {
+//			b1 = 1;
+//		} else {
+//			r1_hmin = abs(conj(r1)*hmin);
+//			r2_hmin = abs(conj(r2)*hmin);
+//			if(r1_hmin<=r2_hmin) {
+//				b2 = (r1_hmin_r90>=0 ? 0 : 1);
+//			} else {
+//				b2 = (r2_hmin_r90>=0 ? 0 : 1);
+//			}
+//		}
+//		msb = (b1==b2 ? 0 : 1);
+//
+//		DBGCMD(cout<<"r1_hmin_r90="<<r1_hmin_r90<<endl);
+//		DBGCMD(cout<<"r2_hmin_r90="<<r2_hmin_r90<<endl);
+//
+//
+//		/*
+//		 *	second bit
+//		 */
+//	    b1 = ydir;
+//		r1 = in - symbols(b1) * hmax;
+//		r2 = in - symbols(2+b1) * hmax;
+//		r1_hmin = (conj(r1)*hmin).real();
+//		r2_hmin = (conj(r2)*hmin).real();
+//		if(r1_hmin>=0 && r2_hmin>=0) {
+//			b2 = 0;
+//		} else if(r1_hmin<0 && r2_hmin<0) {
+//			b1 = 1;
+//		} else {
+//			r1_hmin_r90 = abs(conj(r1)*hmin_r90);
+//			r2_hmin_r90 = abs(conj(r2)*hmin_r90);
+//			if(r1_hmin_r90<=r2_hmin_r90) {
+//				b2 = (r1_hmin>=0 ? 0 : 1);
+//			} else {
+//				b2 = (r2_hmin>=0 ? 0 : 1);
+//			}
+//		}
+//		lsb = (b1==b2 ? 0 : 1);
+//
+//		res_label(i) = msb*2 + lsb;
+//
+//		DBGCMD(cout<<"[b1 b2]=["<<msb<<" "<<lsb<<"]"<<endl);
+//	}
+//
+//	return res_label;
+//}
 
 
 ivec Ant1Relay::nc_ml_demapping(Array<complex<double> > &miso_output, cvec &symbols) {
